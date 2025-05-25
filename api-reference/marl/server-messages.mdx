@@ -1,0 +1,561 @@
+---
+title: "Server Messages"
+description: "Messages sent from MARL WebSocket server to client"
+---
+
+## Overview
+
+Server messages are JSON objects sent from the MARL WebSocket server to your client application. These messages provide real-time updates about agents, simulation state changes, and system events. All messages follow a consistent format with `type` and `payload` fields.
+
+## Message Format
+
+```json
+{
+  "type": "message_type",
+  "payload": {
+    // Message-specific data
+  }
+}
+```
+
+## Message Types
+
+### add_agent
+
+Sent individually for each agent when the client requests initial agents or when new agents are dynamically added to the simulation.
+
+**Direction**: Server → Client (to requesting client)
+
+**Payload**:
+```json
+{
+  "id": "sim_agent_0",
+  "position": [37.78, -122.41],           // [latitude, longitude]
+  "velocity": [0.0001, -0.00005],         // [dLat, dLng] movement vector
+  "type": 1,                              // 0=PEDESTRIAN, 1=VEHICLE
+  "goal": [37.79, -122.42],               // [latitude, longitude] destination
+  "attributes": {},                       // Custom attributes (currently empty)
+  "is_fleeing": false,                    // Whether agent is fleeing from stimulus
+  "path_coords": [                        // Array of [lat, lon, elevation] waypoints
+    [37.78, -122.41, 10.0],
+    [37.781, -122.411, 10.5]
+    // ... more coordinates
+  ]
+}
+```
+
+**Example Handler**:
+```javascript
+function handleAddAgent(agentData) {
+  // Create visual representation
+  const agentMesh = createAgentMesh(agentData.type);
+  
+  // Position in 3D space
+  const position = geoToWorldCoords(agentData.position);
+  agentMesh.position.set(position.x, position.y, position.z);
+  
+  // Set color based on fleeing status
+  agentMesh.material.color.setHex(
+    agentData.is_fleeing ? 0xff0000 : 0x00ff00
+  );
+  
+  // Store agent data
+  agents.set(agentData.id, {
+    mesh: agentMesh,
+    data: agentData,
+    pathIndex: 0
+  });
+  
+  scene.add(agentMesh);
+}
+```
+
+**Notes**:
+- `path_coords` is `null` for pedestrians (they don't follow road networks)
+- Elevation data is included for realistic 3D positioning
+- `velocity` can be used to calculate agent orientation
+- `attributes` field reserved for future customization
+
+---
+
+### initial_population_complete
+
+Sent after all initial agents have been generated and sent via individual `add_agent` messages.
+
+**Direction**: Server → Client (to requesting client)
+
+**Payload**:
+```json
+{
+  "count": 1000  // Number of agents successfully added
+}
+```
+
+**Example Handler**:
+```javascript
+function handlePopulationComplete(data) {
+  console.log(`Simulation ready with ${data.count} agents`);
+  
+  // Hide loading screen
+  document.getElementById('loading').style.display = 'none';
+  
+  // Enable simulation controls
+  enableSimulationControls();
+  
+  // Start simulation loop
+  startSimulationLoop();
+}
+```
+
+**Use Cases**:
+- Hide loading indicators
+- Enable user interface controls
+- Begin simulation updates
+- Initialize performance monitoring
+
+---
+
+### new_path
+
+Sent in response to a successful `request_new_path` message from the client.
+
+**Direction**: Server → Client (to requesting client)
+
+**Payload**:
+```json
+{
+  "agent_id": "sim_agent_123",
+  "goal": [37.77, -122.40],               // [latitude, longitude] new destination
+  "path_coords": [                        // New path waypoints (vehicles only)
+    [37.775, -122.405, 12.0],
+    [37.776, -122.406, 12.5]
+    // ... more coordinates
+  ],
+  "is_fleeing": false                     // Current fleeing status
+}
+```
+
+**Example Handler**:
+```javascript
+function handleNewPath(pathData) {
+  const agent = agents.get(pathData.agent_id);
+  if (!agent) return;
+  
+  // Update agent goal
+  agent.data.goal = pathData.goal;
+  agent.data.path_coords = pathData.path_coords;
+  agent.data.is_fleeing = pathData.is_fleeing;
+  
+  // Reset path progress
+  agent.pathIndex = 0;
+  
+  // Update visual goal indicator
+  updateGoalMarker(pathData.agent_id, pathData.goal);
+  
+  // Update path visualization
+  if (pathData.path_coords) {
+    updatePathVisualization(pathData.agent_id, pathData.path_coords);
+  }
+}
+```
+
+**Notes**:
+- Only sent if path generation succeeds
+- `path_coords` may be `null` for pedestrians
+- Includes current fleeing status (may have changed due to stimulus)
+- Path includes elevation data for each waypoint
+
+---
+
+### update_flee_status
+
+Broadcast to all connected clients when one or more agents' fleeing status changes due to a stimulus event.
+
+**Direction**: Server → All Clients (broadcast)
+
+**Payload**:
+```json
+{
+  "agent_id": "sim_agent_456",
+  "is_fleeing": true  // New fleeing status
+}
+```
+
+**Example Handler**:
+```javascript
+function handleFleeStatusUpdate(statusData) {
+  const agent = agents.get(statusData.agent_id);
+  if (!agent) return;
+  
+  // Update agent data
+  agent.data.is_fleeing = statusData.is_fleeing;
+  
+  // Update visual appearance
+  const color = statusData.is_fleeing ? 0xff0000 : 0x00ff00;
+  agent.mesh.material.color.setHex(color);
+  
+  // Update behavior
+  if (statusData.is_fleeing) {
+    // Increase movement speed
+    agent.fleeSpeed = 2.0;
+    
+    // Add panic animation
+    startPanicAnimation(agent.mesh);
+  } else {
+    // Return to normal speed
+    agent.fleeSpeed = 1.0;
+    
+    // Stop panic animation
+    stopPanicAnimation(agent.mesh);
+  }
+}
+```
+
+**Behavior Changes**:
+- **Fleeing Agents**: Move faster, may ignore normal pathfinding
+- **Normal Agents**: Resume regular behavior patterns
+- **Visual Indicators**: Color changes, animations, effects
+
+---
+
+### ping
+
+Sent periodically by the server to maintain WebSocket connection and detect unresponsive clients.
+
+**Direction**: Server → Client
+
+**Payload**: `null` or empty object
+
+```json
+{
+  "type": "ping"
+  // payload may be null or absent
+}
+```
+
+**Example Handler**:
+```javascript
+function handlePing() {
+  // Optional: Send pong response
+  // Most WebSocket implementations handle this automatically
+  console.log('Received ping from server');
+  
+  // Update connection status indicator
+  updateConnectionStatus('connected');
+  lastPingTime = Date.now();
+}
+```
+
+**Notes**:
+- Sent every 30 seconds by default
+- Used for connection keep-alive
+- No response required from client
+- Can be used to detect connection issues
+
+---
+
+### error
+
+Sent when the server encounters an error processing a client request.
+
+**Direction**: Server → Client (to requesting client)
+
+**Payload**:
+```json
+{
+  "message": "Failed to initialize simulation area."  // Error description
+}
+```
+
+**Example Handler**:
+```javascript
+function handleError(errorData) {
+  console.error('Server error:', errorData.message);
+  
+  // Show user-friendly error message
+  showErrorNotification(errorData.message);
+  
+  // Attempt recovery based on error type
+  if (errorData.message.includes('simulation area')) {
+    // Try with default coordinates
+    requestInitialAgents();
+  }
+}
+```
+
+**Common Error Scenarios**:
+- Invalid coordinates in `request_initial_agents`
+- Agent not found in `request_new_path`
+- Simulation initialization failures
+- Network or processing errors
+
+---
+
+## Advanced Message Handling
+
+### Message Router
+```javascript
+class MARLMessageRouter {
+  constructor() {
+    this.handlers = new Map();
+    this.middleware = [];
+  }
+  
+  // Register message handlers
+  on(messageType, handler) {
+    if (!this.handlers.has(messageType)) {
+      this.handlers.set(messageType, []);
+    }
+    this.handlers.get(messageType).push(handler);
+  }
+  
+  // Add middleware for all messages
+  use(middleware) {
+    this.middleware.push(middleware);
+  }
+  
+  // Process incoming message
+  handle(message) {
+    // Run middleware
+    for (const middleware of this.middleware) {
+      message = middleware(message);
+      if (!message) return; // Middleware can block messages
+    }
+    
+    // Route to handlers
+    const handlers = this.handlers.get(message.type) || [];
+    handlers.forEach(handler => {
+      try {
+        handler(message.payload, message);
+      } catch (error) {
+        console.error(`Error in ${message.type} handler:`, error);
+      }
+    });
+  }
+}
+
+// Usage
+const router = new MARLMessageRouter();
+
+// Add logging middleware
+router.use((message) => {
+  console.log(`Received ${message.type}:`, message.payload);
+  return message;
+});
+
+// Register handlers
+router.on('add_agent', handleAddAgent);
+router.on('new_path', handleNewPath);
+router.on('update_flee_status', handleFleeStatusUpdate);
+
+// WebSocket message handler
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  router.handle(message);
+};
+```
+
+### Agent State Management
+```javascript
+class AgentStateManager {
+  constructor() {
+    this.agents = new Map();
+    this.listeners = new Map();
+  }
+  
+  addAgent(agentData) {
+    this.agents.set(agentData.id, {
+      ...agentData,
+      lastUpdate: Date.now(),
+      pathProgress: 0
+    });
+    
+    this.emit('agentAdded', agentData);
+  }
+  
+  updateAgentPath(pathData) {
+    const agent = this.agents.get(pathData.agent_id);
+    if (!agent) return;
+    
+    agent.goal = pathData.goal;
+    agent.path_coords = pathData.path_coords;
+    agent.is_fleeing = pathData.is_fleeing;
+    agent.pathProgress = 0;
+    agent.lastUpdate = Date.now();
+    
+    this.emit('agentPathUpdated', agent);
+  }
+  
+  updateFleeStatus(statusData) {
+    const agent = this.agents.get(statusData.agent_id);
+    if (!agent) return;
+    
+    const wasFleeingBefore = agent.is_fleeing;
+    agent.is_fleeing = statusData.is_fleeing;
+    agent.lastUpdate = Date.now();
+    
+    if (wasFleeingBefore !== statusData.is_fleeing) {
+      this.emit('agentFleeStatusChanged', agent);
+    }
+  }
+  
+  // Event system
+  on(event, callback) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event).push(callback);
+  }
+  
+  emit(event, data) {
+    const callbacks = this.listeners.get(event) || [];
+    callbacks.forEach(callback => callback(data));
+  }
+}
+```
+
+### Performance Monitoring
+```javascript
+class MARLPerformanceMonitor {
+  constructor() {
+    this.messageStats = new Map();
+    this.startTime = Date.now();
+    this.totalMessages = 0;
+  }
+  
+  recordMessage(messageType) {
+    this.totalMessages++;
+    
+    if (!this.messageStats.has(messageType)) {
+      this.messageStats.set(messageType, {
+        count: 0,
+        lastReceived: null
+      });
+    }
+    
+    const stats = this.messageStats.get(messageType);
+    stats.count++;
+    stats.lastReceived = Date.now();
+  }
+  
+  getStats() {
+    const runtime = Date.now() - this.startTime;
+    const messagesPerSecond = this.totalMessages / (runtime / 1000);
+    
+    return {
+      runtime: runtime,
+      totalMessages: this.totalMessages,
+      messagesPerSecond: messagesPerSecond.toFixed(2),
+      messageBreakdown: Object.fromEntries(this.messageStats)
+    };
+  }
+  
+  logStats() {
+    console.table(this.getStats());
+  }
+}
+
+// Usage
+const monitor = new MARLPerformanceMonitor();
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  monitor.recordMessage(message.type);
+  
+  // Handle message...
+};
+
+// Log stats every 30 seconds
+setInterval(() => {
+  monitor.logStats();
+}, 30000);
+```
+
+## Error Recovery Patterns
+
+### Graceful Degradation
+```javascript
+class RobustMARLClient {
+  constructor(url) {
+    this.url = url;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.agents = new Map();
+    this.pendingRequests = new Map();
+  }
+  
+  connect() {
+    this.ws = new WebSocket(this.url);
+    
+    this.ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        this.handleMessage(message);
+      } catch (error) {
+        console.error('Failed to parse message:', error);
+      }
+    };
+    
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      this.handleConnectionError();
+    };
+    
+    this.ws.onclose = () => {
+      console.log('Connection closed');
+      this.handleConnectionClose();
+    };
+  }
+  
+  handleMessage(message) {
+    // Reset reconnect attempts on successful message
+    this.reconnectAttempts = 0;
+    
+    switch (message.type) {
+      case 'add_agent':
+        this.handleAddAgent(message.payload);
+        break;
+      case 'error':
+        this.handleServerError(message.payload);
+        break;
+      // ... other handlers
+    }
+  }
+  
+  handleConnectionError() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      const delay = Math.pow(2, this.reconnectAttempts) * 1000; // Exponential backoff
+      console.log(`Reconnecting in ${delay}ms...`);
+      
+      setTimeout(() => {
+        this.reconnectAttempts++;
+        this.connect();
+      }, delay);
+    } else {
+      console.error('Max reconnection attempts reached');
+      this.showOfflineMode();
+    }
+  }
+  
+  showOfflineMode() {
+    // Switch to offline simulation mode
+    console.log('Switching to offline mode');
+    // Implement local simulation fallback
+  }
+}
+```
+
+## Best Practices
+
+1. **Handle All Message Types**: Implement handlers for all message types you might receive
+2. **Validate Message Structure**: Check for required fields before processing
+3. **Error Recovery**: Implement graceful degradation for connection issues
+4. **Performance Monitoring**: Track message frequency and processing time
+5. **State Synchronization**: Keep local state in sync with server updates
+6. **Memory Management**: Clean up agent references when no longer needed
+
+## Next Steps
+
+- Review [Client Messages](/api-reference/marl/client-messages) to understand the full communication flow
+- Explore the [WebSocket Overview](/api-reference/marl/websocket-overview) for integration patterns
+- Check out [Risk Analysis](/api-reference/risk/route-analysis) for enhanced simulation capabilities 

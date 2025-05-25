@@ -1,0 +1,473 @@
+---
+title: "Simulation Risk Analysis"
+api: "POST https://api.worldlens.co/api/v1/simulations/"
+description: "Generate simulations with integrated risk assessment and safety analysis"
+---
+
+## Overview
+
+The Simulation Risk Analysis API combines the power of text-to-3D simulation generation with comprehensive risk assessment capabilities. This endpoint creates realistic simulations while simultaneously analyzing potential threats, hazards, and safety concerns within the generated environment.
+
+## Authentication
+
+<CodeGroup>
+```bash API Key
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+```bash Token
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json"
+```
+</CodeGroup>
+
+## Request Body
+
+<ParamField body="prompt" type="string" required>
+  Natural language description of the simulation scenario with risk considerations
+</ParamField>
+
+<ParamField body="risk_analysis" type="object" required>
+  Risk analysis configuration
+  
+  <Expandable title="risk_analysis properties">
+    <ParamField body="risk_analysis.enabled" type="boolean" default="true">
+      Enable integrated risk assessment
+    </ParamField>
+    
+    <ParamField body="risk_analysis.types" type="array">
+      Risk types to analyze: `geopolitical`, `environmental`, `infrastructure`, `crime`, `traffic`, `weather`
+    </ParamField>
+    
+    <ParamField body="risk_analysis.resolution" type="string" default="medium">
+      Analysis resolution: `low`, `medium`, `high`
+    </ParamField>
+    
+    <ParamField body="risk_analysis.time_window" type="object">
+      Time window for temporal risk analysis
+    </ParamField>
+    
+    <ParamField body="risk_analysis.include_mitigation" type="boolean" default="true">
+      Include risk mitigation recommendations
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="scenario_type" type="string" default="general">
+  Scenario type: `emergency_response`, `urban_planning`, `security_assessment`, `disaster_simulation`, `general`
+</ParamField>
+
+<ParamField body="settings" type="object">
+  Simulation settings (same as standard simulation API)
+</ParamField>
+
+<ParamField body="webhook_url" type="string">
+  Optional webhook URL for completion notifications
+</ParamField>
+
+## Example Requests
+
+<CodeGroup>
+```bash Emergency Response Simulation
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Simulate a building fire evacuation in a 20-story office complex during peak hours with emergency responders arriving",
+    "scenario_type": "emergency_response",
+    "risk_analysis": {
+      "enabled": true,
+      "types": ["environmental", "infrastructure", "traffic"],
+      "resolution": "high",
+      "include_mitigation": true
+    },
+    "settings": {
+      "max_agents": 500,
+      "simulation_duration": 900,
+      "environment_type": "indoor"
+    }
+  }'
+```
+
+```bash Urban Planning Assessment
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Model pedestrian and vehicle flow around a new subway station entrance during rush hour",
+    "scenario_type": "urban_planning",
+    "risk_analysis": {
+      "enabled": true,
+      "types": ["traffic", "infrastructure", "crime"],
+      "resolution": "high",
+      "time_window": {
+        "start": "2024-01-15T07:00:00Z",
+        "end": "2024-01-15T09:00:00Z"
+      }
+    },
+    "settings": {
+      "max_agents": 800,
+      "simulation_duration": 7200
+    }
+  }'
+```
+
+```bash Security Assessment
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Simulate crowd dynamics at a large outdoor concert venue with multiple entry/exit points and security checkpoints",
+    "scenario_type": "security_assessment",
+    "risk_analysis": {
+      "enabled": true,
+      "types": ["geopolitical", "crime", "infrastructure"],
+      "resolution": "high",
+      "include_mitigation": true
+    },
+    "settings": {
+      "max_agents": 1000,
+      "simulation_duration": 3600,
+      "environment_type": "outdoor"
+    }
+  }'
+```
+</CodeGroup>
+
+## Response
+
+The response includes all standard simulation fields plus comprehensive risk analysis data:
+
+<ResponseField name="simulation_id" type="string">
+  Unique identifier for the created simulation
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status: `queued`, `processing`, `completed`, `failed`
+</ResponseField>
+
+<ResponseField name="risk_assessment" type="object">
+  Comprehensive risk analysis results
+  
+  <Expandable title="risk_assessment properties">
+    <ResponseField name="risk_assessment.overall_risk_level" type="string">
+      Overall risk level: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="risk_assessment.risk_score" type="number">
+      Numerical risk score (0.0 to 1.0)
+    </ResponseField>
+    
+    <ResponseField name="risk_assessment.risk_zones" type="array">
+      Array of identified risk zones within the simulation
+    </ResponseField>
+    
+    <ResponseField name="risk_assessment.threats" type="array">
+      Detailed threat analysis
+    </ResponseField>
+    
+    <ResponseField name="risk_assessment.vulnerabilities" type="array">
+      Identified vulnerabilities in the scenario
+    </ResponseField>
+    
+    <ResponseField name="risk_assessment.mitigation_strategies" type="array">
+      Recommended risk mitigation strategies
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="safety_metrics" type="object">
+  Safety and performance metrics
+  
+  <Expandable title="safety_metrics properties">
+    <ResponseField name="safety_metrics.evacuation_time" type="number">
+      Estimated evacuation time in seconds (for emergency scenarios)
+    </ResponseField>
+    
+    <ResponseField name="safety_metrics.bottlenecks" type="array">
+      Identified bottlenecks and congestion points
+    </ResponseField>
+    
+    <ResponseField name="safety_metrics.capacity_utilization" type="number">
+      Space/infrastructure capacity utilization (0.0 to 1.0)
+    </ResponseField>
+    
+    <ResponseField name="safety_metrics.accessibility_score" type="number">
+      Accessibility score for disabled individuals
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="recommendations" type="array">
+  Actionable recommendations for improving safety and efficiency
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "simulation_id": "sim_risk_abc123",
+  "status": "completed",
+  "created_at": "2024-01-15T10:30:00Z",
+  "completed_at": "2024-01-15T10:38:15Z",
+  "prompt": "Simulate a building fire evacuation in a 20-story office complex during peak hours",
+  "scenario_type": "emergency_response",
+  "risk_assessment": {
+    "overall_risk_level": "high",
+    "risk_score": 0.75,
+    "risk_zones": [
+      {
+        "id": "zone_001",
+        "type": "bottleneck",
+        "location": {
+          "floor": 15,
+          "coordinates": [37.7749, -122.4194]
+        },
+        "risk_level": "critical",
+        "description": "Stairwell congestion causing evacuation delays",
+        "affected_agents": 45,
+        "estimated_delay": 180
+      },
+      {
+        "id": "zone_002",
+        "type": "structural",
+        "location": {
+          "floor": 8,
+          "coordinates": [37.7751, -122.4196]
+        },
+        "risk_level": "medium",
+        "description": "Potential structural weakness near fire source",
+        "confidence": 0.72
+      }
+    ],
+    "threats": [
+      {
+        "id": "threat_001",
+        "type": "environmental",
+        "severity": "high",
+        "description": "Smoke propagation blocking primary exit routes",
+        "affected_floors": [12, 13, 14, 15],
+        "timeline": {
+          "onset": 120,
+          "peak": 300,
+          "duration": 600
+        }
+      },
+      {
+        "id": "threat_002",
+        "type": "infrastructure",
+        "severity": "medium",
+        "description": "Elevator system shutdown affecting mobility-impaired evacuation",
+        "affected_population": 12,
+        "alternative_routes": ["stairwell_a", "stairwell_c"]
+      }
+    ],
+    "vulnerabilities": [
+      {
+        "id": "vuln_001",
+        "category": "evacuation_capacity",
+        "description": "Insufficient stairwell capacity for building occupancy",
+        "current_capacity": 800,
+        "required_capacity": 1200,
+        "severity": "high"
+      },
+      {
+        "id": "vuln_002",
+        "category": "communication",
+        "description": "Limited emergency communication systems on upper floors",
+        "affected_floors": [16, 17, 18, 19, 20],
+        "severity": "medium"
+      }
+    ],
+    "mitigation_strategies": [
+      {
+        "id": "mitigation_001",
+        "type": "infrastructure",
+        "priority": "high",
+        "description": "Install additional emergency stairwell on east side",
+        "estimated_cost": 500000,
+        "implementation_time": "6 months",
+        "risk_reduction": 0.35
+      },
+      {
+        "id": "mitigation_002",
+        "type": "procedural",
+        "priority": "medium",
+        "description": "Implement phased evacuation protocol for upper floors",
+        "estimated_cost": 15000,
+        "implementation_time": "2 weeks",
+        "risk_reduction": 0.20
+      }
+    ]
+  },
+  "safety_metrics": {
+    "evacuation_time": 1080,
+    "bottlenecks": [
+      {
+        "location": "stairwell_b_floor_15",
+        "severity": "critical",
+        "delay_time": 180,
+        "affected_agents": 45
+      },
+      {
+        "location": "main_lobby_exit",
+        "severity": "medium",
+        "delay_time": 60,
+        "affected_agents": 120
+      }
+    ],
+    "capacity_utilization": 0.85,
+    "accessibility_score": 0.65
+  },
+  "recommendations": [
+    {
+      "category": "immediate",
+      "priority": "urgent",
+      "description": "Conduct emergency evacuation drill focusing on upper floor procedures",
+      "implementation_time": "1 week",
+      "cost": "low"
+    },
+    {
+      "category": "short_term",
+      "priority": "high",
+      "description": "Install emergency communication systems on floors 16-20",
+      "implementation_time": "1 month",
+      "cost": "medium"
+    },
+    {
+      "category": "long_term",
+      "priority": "high",
+      "description": "Add secondary emergency stairwell to reduce evacuation time",
+      "implementation_time": "6 months",
+      "cost": "high"
+    }
+  ]
+}
+```
+
+## Scenario Types
+
+### Emergency Response
+- Fire evacuations
+- Natural disaster response
+- Medical emergencies
+- Hazmat incidents
+
+**Key Metrics**: Evacuation time, casualty estimates, response effectiveness
+
+### Urban Planning
+- Traffic flow analysis
+- Pedestrian movement studies
+- Public transportation impact
+- Development impact assessment
+
+**Key Metrics**: Congestion levels, accessibility, capacity utilization
+
+### Security Assessment
+- Crowd control scenarios
+- Event security planning
+- Threat response evaluation
+- Perimeter security analysis
+
+**Key Metrics**: Security coverage, response time, vulnerability assessment
+
+### Disaster Simulation
+- Earthquake response
+- Flood evacuation
+- Hurricane preparation
+- Infrastructure failure
+
+**Key Metrics**: Damage assessment, recovery time, resource allocation
+
+## Risk Analysis Features
+
+### Real-time Threat Detection
+- Dynamic threat identification during simulation
+- Adaptive risk scoring based on evolving conditions
+- Predictive threat modeling
+
+### Multi-layered Analysis
+- Individual agent risk assessment
+- Group dynamics risk evaluation
+- Infrastructure vulnerability analysis
+- Environmental hazard modeling
+
+### Temporal Risk Modeling
+- Time-based risk evolution
+- Peak risk period identification
+- Long-term risk trend analysis
+
+### Mitigation Planning
+- Automated mitigation strategy generation
+- Cost-benefit analysis of interventions
+- Implementation timeline recommendations
+
+## Integration with Other APIs
+
+### Combine with Route Risk Analysis
+```javascript
+// First, analyze route risks
+const routeRisk = await analyzeRouteRisk(evacuationRoute);
+
+// Then create simulation with risk context
+const simulation = await createRiskSimulation({
+  prompt: "Emergency evacuation following the analyzed route",
+  risk_analysis: {
+    enabled: true,
+    baseline_risks: routeRisk.threats,
+    resolution: "high"
+  }
+});
+```
+
+### Enhance with MARL Real-time Data
+```javascript
+// Use MARL WebSocket for real-time risk updates
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  
+  if (message.type === 'update_flee_status') {
+    // Update risk assessment based on agent behavior
+    updateRiskAssessment(message.payload);
+  }
+};
+```
+
+## Status Codes
+
+<ResponseField name="201" type="Created">
+  Simulation with risk analysis successfully queued
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid request parameters or risk analysis configuration
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or missing API key
+</ResponseField>
+
+<ResponseField name="429" type="Too Many Requests">
+  Rate limit exceeded
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error during simulation or risk analysis
+</ResponseField>
+
+## Best Practices
+
+1. **Scenario-Specific Configuration**: Choose appropriate risk types for your scenario
+2. **Resolution vs Performance**: Higher resolution provides more detail but takes longer
+3. **Temporal Considerations**: Include time windows for time-sensitive scenarios
+4. **Mitigation Planning**: Enable mitigation recommendations for actionable insights
+5. **Iterative Refinement**: Use results to refine subsequent simulations
+
+## Next Steps
+
+- Review [Route Risk Analysis](/api-reference/risk/route-analysis) for complementary risk assessment
+- Explore [Urban Mobility MARL](/api-reference/marl/websocket-overview) for real-time risk monitoring
+- Check [Simulation Results](/api-reference/simulation/results) for accessing complete risk data 

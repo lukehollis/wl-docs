@@ -1,0 +1,515 @@
+---
+title: "Radius Risk Analysis"
+api: "GET https://api.worldlens.co/risk-assessment/radius/"
+description: "Assess risks within a specified radius around a geographic point"
+---
+
+## Overview
+
+The Radius Risk Analysis API evaluates potential threats and hazards within a circular area around a specified geographic point. This endpoint is ideal for assessing risks in a specific location, planning safe zones, or analyzing area-wide security concerns.
+
+## Authentication
+
+<CodeGroup>
+```bash API Key
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash Token
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+```bash Anonymous
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5"
+```
+</CodeGroup>
+
+<Note>
+This endpoint supports anonymous access for basic risk assessments, though authenticated requests receive more detailed analysis and higher point limits.
+</Note>
+
+## Query Parameters
+
+<ParamField query="latitude" type="number" required>
+  Center latitude coordinate (-90 to 90)
+</ParamField>
+
+<ParamField query="longitude" type="number" required>
+  Center longitude coordinate (-180 to 180)
+</ParamField>
+
+<ParamField query="radius_km" type="number" required>
+  Radius in kilometers (0.1 to 100)
+</ParamField>
+
+<ParamField query="num_points" type="integer" default="100">
+  Number of analysis points to generate within the radius (10 to 1000)
+  - Anonymous users: max 100 points
+  - Authenticated users: max 1000 points
+</ParamField>
+
+<ParamField query="risk_types" type="string">
+  Comma-separated list of risk types to analyze. If not provided, all types are assessed.
+  
+  Available types: `geopolitical`, `environmental`, `infrastructure`, `crime`, `traffic`, `weather`
+</ParamField>
+
+<ParamField query="resolution" type="string" default="medium">
+  Analysis resolution: `low`, `medium`, `high`
+</ParamField>
+
+<ParamField query="time" type="string">
+  ISO 8601 timestamp for time-specific analysis. Defaults to current time.
+</ParamField>
+
+## Example Requests
+
+<CodeGroup>
+```bash Basic Area Analysis
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=2" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash High-Resolution Analysis
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5&num_points=500&resolution=high" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash Specific Risk Types
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=3&risk_types=crime,traffic&num_points=200" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash Time-Specific Analysis
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=1&time=2024-01-15T22:00:00Z" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="riskPoints" type="array">
+  Array of risk assessment points within the specified radius
+  
+  <Expandable title="riskPoints structure">
+    <ResponseField name="riskPoints[].lat" type="number">
+      Latitude coordinate of the risk point
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].lng" type="number">
+      Longitude coordinate of the risk point
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].weight" type="number">
+      Risk weight/score (0.0 to 1.0, where 1.0 is highest risk)
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].riskLevel" type="string">
+      Categorical risk level: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].distance" type="number">
+      Distance from center point in kilometers
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].threats" type="array">
+      Array of specific threats identified at this location
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="center" type="object">
+  Center point information
+  
+  <Expandable title="center properties">
+    <ResponseField name="center.latitude" type="number">
+      Center latitude coordinate
+    </ResponseField>
+    
+    <ResponseField name="center.longitude" type="number">
+      Center longitude coordinate
+    </ResponseField>
+    
+    <ResponseField name="center.radius_km" type="number">
+      Analysis radius in kilometers
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="summary" type="object">
+  Area risk summary statistics
+  
+  <Expandable title="summary properties">
+    <ResponseField name="summary.overallRisk" type="string">
+      Overall area risk level: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="summary.maxRiskWeight" type="number">
+      Highest risk weight found in the area
+    </ResponseField>
+    
+    <ResponseField name="summary.averageRisk" type="number">
+      Average risk weight across all points
+    </ResponseField>
+    
+    <ResponseField name="summary.area_km2" type="number">
+      Total analyzed area in square kilometers
+    </ResponseField>
+    
+    <ResponseField name="summary.highRiskZones" type="integer">
+      Number of high-risk zones identified
+    </ResponseField>
+    
+    <ResponseField name="summary.safeZones" type="integer">
+      Number of low-risk zones identified
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="threats" type="array">
+  Detailed threat information for the area
+  
+  <Expandable title="threats structure">
+    <ResponseField name="threats[].id" type="string">
+      Unique threat identifier
+    </ResponseField>
+    
+    <ResponseField name="threats[].type" type="string">
+      Threat category
+    </ResponseField>
+    
+    <ResponseField name="threats[].severity" type="string">
+      Threat severity: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="threats[].description" type="string">
+      Human-readable threat description
+    </ResponseField>
+    
+    <ResponseField name="threats[].location" type="object">
+      Geographic location of the threat
+    </ResponseField>
+    
+    <ResponseField name="threats[].affected_radius" type="number">
+      Radius of threat influence in kilometers
+    </ResponseField>
+    
+    <ResponseField name="threats[].confidence" type="number">
+      Confidence score for the threat assessment (0.0 to 1.0)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="zones" type="array">
+  Risk zone classifications within the area
+  
+  <Expandable title="zones structure">
+    <ResponseField name="zones[].id" type="string">
+      Unique zone identifier
+    </ResponseField>
+    
+    <ResponseField name="zones[].type" type="string">
+      Zone type: `safe`, `caution`, `danger`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="zones[].boundary" type="array">
+      Array of coordinates defining the zone boundary
+    </ResponseField>
+    
+    <ResponseField name="zones[].riskLevel" type="string">
+      Zone risk level
+    </ResponseField>
+    
+    <ResponseField name="zones[].primaryThreats" type="array">
+      Main threats affecting this zone
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "riskPoints": [
+    {
+      "lat": 37.7749,
+      "lng": -122.4194,
+      "weight": 0.3,
+      "riskLevel": "medium",
+      "distance": 0.0,
+      "threats": ["moderate_traffic", "minor_crime_activity"]
+    },
+    {
+      "lat": 37.7759,
+      "lng": -122.4184,
+      "weight": 0.8,
+      "riskLevel": "high",
+      "distance": 1.2,
+      "threats": ["active_construction", "high_crime_area"]
+    },
+    {
+      "lat": 37.7739,
+      "lng": -122.4204,
+      "weight": 0.1,
+      "riskLevel": "low",
+      "distance": 1.1,
+      "threats": []
+    }
+  ],
+  "center": {
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "radius_km": 2.0
+  },
+  "summary": {
+    "overallRisk": "medium",
+    "maxRiskWeight": 0.8,
+    "averageRisk": 0.4,
+    "area_km2": 12.57,
+    "highRiskZones": 2,
+    "safeZones": 5
+  },
+  "threats": [
+    {
+      "id": "threat_001",
+      "type": "infrastructure",
+      "severity": "high",
+      "description": "Major construction project causing significant disruption",
+      "location": {
+        "lat": 37.7759,
+        "lng": -122.4184
+      },
+      "affected_radius": 0.5,
+      "confidence": 0.92
+    },
+    {
+      "id": "threat_002",
+      "type": "crime",
+      "severity": "medium",
+      "description": "Elevated crime activity in commercial district",
+      "location": {
+        "lat": 37.7755,
+        "lng": -122.4180
+      },
+      "affected_radius": 0.3,
+      "confidence": 0.78
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_001",
+      "type": "safe",
+      "boundary": [
+        [37.7740, -122.4210],
+        [37.7740, -122.4200],
+        [37.7750, -122.4200],
+        [37.7750, -122.4210]
+      ],
+      "riskLevel": "low",
+      "primaryThreats": []
+    },
+    {
+      "id": "zone_002",
+      "type": "danger",
+      "boundary": [
+        [37.7755, -122.4190],
+        [37.7755, -122.4180],
+        [37.7765, -122.4180],
+        [37.7765, -122.4190]
+      ],
+      "riskLevel": "high",
+      "primaryThreats": ["construction", "crime"]
+    }
+  ]
+}
+```
+
+## Use Cases
+
+### Emergency Planning
+```bash
+# Assess risks around a hospital for emergency evacuation planning
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=3&risk_types=environmental,infrastructure&num_points=300" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+### Event Security
+```bash
+# Analyze security risks around an event venue
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=1&risk_types=crime,geopolitical&time=2024-01-15T19:00:00Z" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+### Real Estate Assessment
+```bash
+# Evaluate neighborhood safety for property investment
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=0.5&risk_types=crime,environmental&resolution=high" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+### Logistics Planning
+```bash
+# Assess risks around a distribution center
+curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=10&risk_types=traffic,infrastructure,weather" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+## Status Codes
+
+<ResponseField name="200" type="OK">
+  Risk analysis completed successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid coordinates, radius, or other parameters
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or missing API key (for authenticated features)
+</ResponseField>
+
+<ResponseField name="429" type="Too Many Requests">
+  Rate limit exceeded
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error during risk analysis
+</ResponseField>
+
+## Error Responses
+
+```json
+{
+  "error": "Invalid radius: radius_km must be between 0.1 and 100",
+  "code": "INVALID_RADIUS",
+  "details": {
+    "field": "radius_km",
+    "min_value": 0.1,
+    "max_value": 100,
+    "provided_value": 150
+  }
+}
+```
+
+```json
+{
+  "error": "Too many points requested for anonymous user",
+  "code": "POINTS_LIMIT_EXCEEDED",
+  "details": {
+    "max_points_anonymous": 100,
+    "max_points_authenticated": 1000,
+    "requested_points": 500
+  }
+}
+```
+
+## Integration Examples
+
+### JavaScript/Web
+```javascript
+async function analyzeAreaRisk(lat, lng, radius) {
+    const params = new URLSearchParams({
+        latitude: lat,
+        longitude: lng,
+        radius_km: radius,
+        num_points: 200,
+        resolution: 'high'
+    });
+    
+    const response = await fetch(`https://api.worldlens.co/risk-assessment/radius/?${params}`, {
+        headers: {
+            'Authorization': 'Api-Key YOUR_API_KEY'
+        }
+    });
+    
+    const riskData = await response.json();
+    
+    // Create heat map visualization
+    createRiskHeatMap(riskData.riskPoints);
+    
+    // Highlight high-risk zones
+    riskData.zones.forEach(zone => {
+        if (zone.riskLevel === 'high') {
+            highlightDangerZone(zone.boundary);
+        }
+    });
+}
+```
+
+### Python
+```python
+import requests
+
+def analyze_area_risk(lat, lng, radius_km, api_key, num_points=100):
+    url = "https://api.worldlens.co/risk-assessment/radius/"
+    params = {
+        "latitude": lat,
+        "longitude": lng,
+        "radius_km": radius_km,
+        "num_points": num_points,
+        "resolution": "high"
+    }
+    headers = {
+        "Authorization": f"Api-Key {api_key}"
+    }
+    
+    response = requests.get(url, params=params, headers=headers)
+    return response.json()
+
+# Example usage
+risk_data = analyze_area_risk(37.7749, -122.4194, 2.0, "your_api_key", 300)
+
+# Find high-risk areas
+high_risk_points = [
+    point for point in risk_data['riskPoints'] 
+    if point['weight'] > 0.7
+]
+```
+
+### R
+```r
+library(httr)
+library(jsonlite)
+
+analyze_area_risk <- function(lat, lng, radius_km, api_key) {
+  url <- "https://api.worldlens.co/risk-assessment/radius/"
+  
+  response <- GET(
+    url,
+    query = list(
+      latitude = lat,
+      longitude = lng,
+      radius_km = radius_km,
+      num_points = 200
+    ),
+    add_headers(Authorization = paste("Api-Key", api_key))
+  )
+  
+  content(response, "parsed")
+}
+
+# Example usage
+risk_data <- analyze_area_risk(37.7749, -122.4194, 2.0, "your_api_key")
+```
+
+## Visualization Tips
+
+### Heat Maps
+Use the `weight` values to create color-coded heat maps showing risk intensity across the area.
+
+### Zone Boundaries
+Render the `zones` boundaries to clearly delineate safe and dangerous areas.
+
+### Threat Markers
+Place markers at threat locations with icons representing the threat type and severity.
+
+### Distance Rings
+Show concentric circles at different distances from the center point for spatial reference.
+
+## Next Steps
+
+- Combine with [Route Risk Analysis](/api-reference/risk/route-analysis) for comprehensive travel planning
+- Integrate with [Urban Mobility MARL](/api-reference/marl/websocket-overview) for dynamic risk modeling
+- Use with [Simulation APIs](/api-reference/simulation/text-to-3d) for scenario-based risk assessment 

@@ -1,0 +1,250 @@
+---
+title: "Simulation Status"
+api: "GET https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/"
+description: "Check the current status and progress of a simulation"
+---
+
+## Overview
+
+The Simulation Status API allows you to monitor the progress of your simulation generation. Use this endpoint to check whether your simulation is queued, processing, completed, or has encountered an error.
+
+## Authentication
+
+<CodeGroup>
+```bash API Key
+curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash Token
+curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+```bash Anonymous
+curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/"
+```
+</CodeGroup>
+
+<Note>
+This endpoint supports anonymous access, allowing you to check status without authentication if you have the simulation ID.
+</Note>
+
+## Path Parameters
+
+<ParamField path="simulation_id" type="string" required>
+  The unique identifier of the simulation returned when you created it
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/status/" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+## Response
+
+<ResponseField name="simulation_id" type="string">
+  The unique identifier of the simulation
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status of the simulation
+  - `queued`: Waiting to be processed
+  - `processing`: Currently being generated
+  - `completed`: Successfully completed
+  - `failed`: Generation failed
+</ResponseField>
+
+<ResponseField name="progress" type="object">
+  Detailed progress information
+  
+  <Expandable title="progress properties">
+    <ResponseField name="progress.percentage" type="integer">
+      Completion percentage (0-100)
+    </ResponseField>
+    
+    <ResponseField name="progress.current_stage" type="string">
+      Current processing stage
+    </ResponseField>
+    
+    <ResponseField name="progress.stages_completed" type="array">
+      List of completed processing stages
+    </ResponseField>
+    
+    <ResponseField name="progress.estimated_time_remaining" type="integer">
+      Estimated seconds until completion
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp when the simulation was created
+</ResponseField>
+
+<ResponseField name="started_at" type="string">
+  ISO 8601 timestamp when processing began (null if not started)
+</ResponseField>
+
+<ResponseField name="completed_at" type="string">
+  ISO 8601 timestamp when processing completed (null if not completed)
+</ResponseField>
+
+<ResponseField name="prompt" type="string">
+  The original prompt used to generate the simulation
+</ResponseField>
+
+<ResponseField name="error" type="object">
+  Error details if status is `failed`
+  
+  <Expandable title="error properties">
+    <ResponseField name="error.message" type="string">
+      Human-readable error description
+    </ResponseField>
+    
+    <ResponseField name="error.code" type="string">
+      Machine-readable error code
+    </ResponseField>
+    
+    <ResponseField name="error.details" type="object">
+      Additional error context
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Responses
+
+### Queued Simulation
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "status": "queued",
+  "progress": {
+    "percentage": 0,
+    "current_stage": "waiting",
+    "stages_completed": [],
+    "estimated_time_remaining": 300
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": null,
+  "completed_at": null,
+  "prompt": "Create a busy downtown intersection with pedestrians crossing"
+}
+```
+
+### Processing Simulation
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "status": "processing",
+  "progress": {
+    "percentage": 65,
+    "current_stage": "generating_agents",
+    "stages_completed": [
+      "parsing_prompt",
+      "creating_terrain",
+      "placing_buildings"
+    ],
+    "estimated_time_remaining": 120
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": "2024-01-15T10:31:15Z",
+  "completed_at": null,
+  "prompt": "Create a busy downtown intersection with pedestrians crossing"
+}
+```
+
+### Completed Simulation
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "status": "completed",
+  "progress": {
+    "percentage": 100,
+    "current_stage": "completed",
+    "stages_completed": [
+      "parsing_prompt",
+      "creating_terrain",
+      "placing_buildings",
+      "generating_agents",
+      "finalizing_simulation"
+    ],
+    "estimated_time_remaining": 0
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": "2024-01-15T10:31:15Z",
+  "completed_at": "2024-01-15T10:35:42Z",
+  "prompt": "Create a busy downtown intersection with pedestrians crossing"
+}
+```
+
+### Failed Simulation
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "status": "failed",
+  "progress": {
+    "percentage": 25,
+    "current_stage": "failed",
+    "stages_completed": [
+      "parsing_prompt"
+    ],
+    "estimated_time_remaining": 0
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": "2024-01-15T10:31:15Z",
+  "completed_at": null,
+  "prompt": "Create a busy downtown intersection with pedestrians crossing",
+  "error": {
+    "message": "Unable to generate terrain from the provided prompt",
+    "code": "TERRAIN_GENERATION_FAILED",
+    "details": {
+      "stage": "creating_terrain",
+      "reason": "Insufficient geographic context in prompt"
+    }
+  }
+}
+```
+
+## Processing Stages
+
+Simulations go through several stages during generation:
+
+| Stage | Description |
+|-------|-------------|
+| `parsing_prompt` | Analyzing and understanding the input prompt |
+| `creating_terrain` | Generating the base terrain and environment |
+| `placing_buildings` | Adding structures and buildings |
+| `generating_agents` | Creating and positioning actors |
+| `configuring_behaviors` | Setting up agent behaviors and interactions |
+| `finalizing_simulation` | Final optimization and validation |
+
+## Status Codes
+
+<ResponseField name="200" type="OK">
+  Status retrieved successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Simulation not found
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error retrieving status
+</ResponseField>
+
+## Polling Best Practices
+
+When polling for status updates:
+
+1. **Start with short intervals**: Poll every 5-10 seconds initially
+2. **Increase intervals gradually**: Move to 30-60 seconds for longer simulations
+3. **Respect rate limits**: Don't exceed your API rate limits
+4. **Use webhooks when possible**: Consider using webhook notifications instead of polling
+
+## Next Steps
+
+- Once status is `completed`, retrieve results with the [Results API](/api-reference/simulation/results)
+- Learn about [Risk Analysis](/api-reference/simulation/risk-analysis) for safety assessments
+- Explore [Urban Mobility MARL](/api-reference/marl/websocket-overview) for real-time simulations 

@@ -1,0 +1,414 @@
+---
+title: "Client Messages"
+description: "Messages sent from client to MARL WebSocket server"
+---
+
+## Overview
+
+Client messages are JSON objects sent from your application to the MARL WebSocket server to control and interact with the urban mobility simulation. All messages follow a consistent format with `type` and `payload` fields.
+
+## Message Format
+
+```json
+{
+  "type": "message_type",
+  "payload": {
+    // Message-specific data
+  }
+}
+```
+
+## Message Types
+
+### request_initial_agents
+
+Initializes the simulation and requests the first batch of agents. This should be the first message sent after connecting.
+
+**Direction**: Client → Server
+
+**Payload**:
+```json
+{
+  "focus_latitude": 37.7749,    // Optional: Center latitude for simulation
+  "focus_longitude": -122.4194  // Optional: Center longitude for simulation
+}
+```
+
+**Example**:
+```javascript
+ws.send(JSON.stringify({
+  type: 'request_initial_agents',
+  payload: {
+    focus_latitude: 37.7749,
+    focus_longitude: -122.4194
+  }
+}));
+```
+
+**Server Response**: 
+- Multiple `add_agent` messages (one per agent)
+- Final `initial_population_complete` message
+
+**Notes**:
+- If coordinates are provided, simulation centers around that location with a 2km radius
+- If coordinates are omitted, uses default San Francisco downtown bounds
+- Generates up to 1,000 agents (configurable)
+- Clears any existing agents before generating new ones
+
+---
+
+### request_new_path
+
+Requests a new destination and path for a specific agent. Typically used when an agent reaches its current goal or needs to be redirected.
+
+**Direction**: Client → Server
+
+**Payload**:
+```json
+{
+  "agent_id": "sim_agent_123"  // ID of the agent requiring a new path
+}
+```
+
+**Example**:
+```javascript
+// Request new path when agent reaches destination
+function onAgentReachedGoal(agentId) {
+  ws.send(JSON.stringify({
+    type: 'request_new_path',
+    payload: {
+      agent_id: agentId
+    }
+  }));
+}
+```
+
+**Server Response**: 
+- `new_path` message with updated goal and path data
+- No response if agent not found or path generation fails
+
+**Behavior**:
+- **Vehicles**: Finds new random goal node on road network, calculates shortest path
+- **Pedestrians**: Selects new random goal position within bounds
+- Ensures minimum distance from current position
+- Includes elevation data for each waypoint
+
+---
+
+### set_stimulus
+
+Activates, deactivates, or updates a global stimulus event (e.g., emergency, disaster) that affects agent behavior.
+
+**Direction**: Client → Server
+
+**Payload**:
+```json
+{
+  "active": true,                    // Whether stimulus is active
+  "location": [37.7800, -122.4100]  // [latitude, longitude] or null
+}
+```
+
+**Examples**:
+
+<CodeGroup>
+```javascript Activate Emergency
+// Activate emergency at specific location
+ws.send(JSON.stringify({
+  type: 'set_stimulus',
+  payload: {
+    active: true,
+    location: [37.7749, -122.4194]
+  }
+}));
+```
+
+```javascript Deactivate Emergency
+// Deactivate emergency stimulus
+ws.send(JSON.stringify({
+  type: 'set_stimulus',
+  payload: {
+    active: false,
+    location: null
+  }
+}));
+```
+
+```javascript Move Emergency
+// Move emergency to new location
+ws.send(JSON.stringify({
+  type: 'set_stimulus',
+  payload: {
+    active: true,
+    location: [37.7849, -122.4094]
+  }
+}));
+```
+</CodeGroup>
+
+**Server Response**: 
+- `update_flee_status` messages for affected agents (broadcast to all clients)
+
+**Behavior**:
+- Agents within flee radius start fleeing behavior
+- Agents outside flee radius return to normal behavior
+- Flee radius is configurable (default: ~500 meters)
+- Only one global stimulus can be active at a time
+
+---
+
+## Advanced Usage Patterns
+
+### Sequential Agent Population
+```javascript
+let agentsLoaded = 0;
+const targetAgents = 500;
+
+ws.onmessage = function(event) {
+  const message = JSON.parse(event.data);
+  
+  if (message.type === 'add_agent') {
+    agentsLoaded++;
+    addAgentToVisualization(message.payload);
+    
+    // Update loading progress
+    updateProgress(agentsLoaded / targetAgents);
+  }
+  
+  if (message.type === 'initial_population_complete') {
+    console.log(`Simulation ready with ${message.payload.count} agents`);
+    hideLoadingScreen();
+  }
+};
+```
+
+### Dynamic Path Management
+```javascript
+class AgentManager {
+  constructor(websocket) {
+    this.ws = websocket;
+    this.agents = new Map();
+    this.pathRequests = new Set();
+  }
+  
+  requestNewPath(agentId) {
+    if (this.pathRequests.has(agentId)) {
+      return; // Avoid duplicate requests
+    }
+    
+    this.pathRequests.add(agentId);
+    
+    this.ws.send(JSON.stringify({
+      type: 'request_new_path',
+      payload: { agent_id: agentId }
+    }));
+  }
+  
+  handleNewPath(pathData) {
+    this.pathRequests.delete(pathData.agent_id);
+    this.updateAgentPath(pathData);
+  }
+}
+```
+
+### Emergency Scenario Management
+```javascript
+class EmergencyController {
+  constructor(websocket) {
+    this.ws = websocket;
+    this.activeEmergency = null;
+  }
+  
+  activateEmergency(lat, lng, type = 'evacuation') {
+    this.activeEmergency = {
+      location: [lat, lng],
+      type: type,
+      startTime: Date.now()
+    };
+    
+    this.ws.send(JSON.stringify({
+      type: 'set_stimulus',
+      payload: {
+        active: true,
+        location: [lat, lng]
+      }
+    }));
+    
+    // Auto-deactivate after 10 minutes
+    setTimeout(() => {
+      this.deactivateEmergency();
+    }, 600000);
+  }
+  
+  deactivateEmergency() {
+    if (!this.activeEmergency) return;
+    
+    this.ws.send(JSON.stringify({
+      type: 'set_stimulus',
+      payload: {
+        active: false,
+        location: null
+      }
+    }));
+    
+    this.activeEmergency = null;
+  }
+  
+  moveEmergency(newLat, newLng) {
+    if (!this.activeEmergency) return;
+    
+    this.activeEmergency.location = [newLat, newLng];
+    
+    this.ws.send(JSON.stringify({
+      type: 'set_stimulus',
+      payload: {
+        active: true,
+        location: [newLat, newLng]
+      }
+    }));
+  }
+}
+```
+
+### Multi-Area Simulation
+```javascript
+class MultiAreaSimulation {
+  constructor() {
+    this.areas = [
+      { name: 'Downtown', lat: 37.7749, lng: -122.4194 },
+      { name: 'Mission', lat: 37.7599, lng: -122.4148 },
+      { name: 'Castro', lat: 37.7609, lng: -122.4350 }
+    ];
+    this.currentArea = 0;
+  }
+  
+  switchToNextArea() {
+    this.currentArea = (this.currentArea + 1) % this.areas.length;
+    const area = this.areas[this.currentArea];
+    
+    ws.send(JSON.stringify({
+      type: 'request_initial_agents',
+      payload: {
+        focus_latitude: area.lat,
+        focus_longitude: area.lng
+      }
+    }));
+    
+    console.log(`Switched to ${area.name} area`);
+  }
+}
+```
+
+## Error Handling
+
+### Message Validation
+```javascript
+function sendMessage(type, payload) {
+  // Validate message structure
+  if (!type || typeof type !== 'string') {
+    console.error('Invalid message type:', type);
+    return false;
+  }
+  
+  if (!payload || typeof payload !== 'object') {
+    console.error('Invalid payload:', payload);
+    return false;
+  }
+  
+  // Type-specific validation
+  switch(type) {
+    case 'request_initial_agents':
+      if (payload.focus_latitude && 
+          (payload.focus_latitude < -90 || payload.focus_latitude > 90)) {
+        console.error('Invalid latitude:', payload.focus_latitude);
+        return false;
+      }
+      break;
+      
+    case 'request_new_path':
+      if (!payload.agent_id || typeof payload.agent_id !== 'string') {
+        console.error('Invalid agent_id:', payload.agent_id);
+        return false;
+      }
+      break;
+      
+    case 'set_stimulus':
+      if (payload.active && (!payload.location || !Array.isArray(payload.location))) {
+        console.error('Active stimulus requires valid location array');
+        return false;
+      }
+      break;
+  }
+  
+  try {
+    ws.send(JSON.stringify({ type, payload }));
+    return true;
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    return false;
+  }
+}
+```
+
+### Connection State Management
+```javascript
+class MARLConnection {
+  constructor(url) {
+    this.url = url;
+    this.ws = null;
+    this.messageQueue = [];
+    this.connected = false;
+  }
+  
+  connect() {
+    this.ws = new WebSocket(this.url);
+    
+    this.ws.onopen = () => {
+      this.connected = true;
+      console.log('Connected to MARL server');
+      
+      // Send queued messages
+      while (this.messageQueue.length > 0) {
+        const message = this.messageQueue.shift();
+        this.ws.send(JSON.stringify(message));
+      }
+    };
+    
+    this.ws.onclose = () => {
+      this.connected = false;
+      console.log('Disconnected from MARL server');
+      
+      // Attempt reconnection after 5 seconds
+      setTimeout(() => {
+        this.connect();
+      }, 5000);
+    };
+  }
+  
+  send(type, payload) {
+    const message = { type, payload };
+    
+    if (this.connected) {
+      this.ws.send(JSON.stringify(message));
+    } else {
+      // Queue message for when connection is restored
+      this.messageQueue.push(message);
+    }
+  }
+}
+```
+
+## Best Practices
+
+1. **Initialize First**: Always send `request_initial_agents` as your first message
+2. **Validate Coordinates**: Ensure latitude/longitude values are within valid ranges
+3. **Handle Failures**: Not all `request_new_path` calls will succeed
+4. **Manage State**: Track active emergencies and agent states locally
+5. **Rate Limiting**: Don't spam path requests for the same agent
+6. **Graceful Degradation**: Queue messages when connection is lost
+
+## Next Steps
+
+- Learn about [Server Messages](/api-reference/marl/server-messages) you'll receive in response
+- Explore the [WebSocket Overview](/api-reference/marl/websocket-overview) for integration examples
+- Check out [Risk Analysis](/api-reference/risk/route-analysis) for enhanced simulations 

@@ -1,0 +1,452 @@
+---
+title: "Simulation Results"
+api: "GET https://api.worldlens.co/api/v1/simulations/{simulation_id}/"
+description: "Retrieve the complete results and data from a completed simulation"
+---
+
+## Overview
+
+The Simulation Results API provides access to the complete generated simulation data, including 3D models, agent behaviors, terrain information, and interactive elements. This endpoint returns comprehensive simulation data that can be used for visualization, analysis, or further processing.
+
+## Authentication
+
+<CodeGroup>
+```bash API Key
+curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash Token
+curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+```bash Anonymous
+curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/"
+```
+</CodeGroup>
+
+<Note>
+This endpoint supports anonymous access for completed simulations, allowing you to retrieve results without authentication if you have the simulation ID.
+</Note>
+
+## Path Parameters
+
+<ParamField path="simulation_id" type="string" required>
+  The unique identifier of the completed simulation
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="format" type="string" default="json">
+  Response format: `json`, `geojson`, `gltf`, `fbx`
+</ParamField>
+
+<ParamField query="include_assets" type="boolean" default="true">
+  Whether to include 3D model assets and textures in the response
+</ParamField>
+
+<ParamField query="compression" type="string" default="gzip">
+  Compression format: `none`, `gzip`, `brotli`
+</ParamField>
+
+## Example Requests
+
+<CodeGroup>
+```bash JSON Format
+curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash GeoJSON Export
+curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/?format=geojson" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+
+```bash 3D Model Export
+curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/?format=gltf&include_assets=true" \
+  -H "Authorization: Api-Key YOUR_API_KEY"
+```
+</CodeGroup>
+
+## Response (JSON Format)
+
+<ResponseField name="simulation_id" type="string">
+  The unique identifier of the simulation
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status (should be `completed` for successful retrieval)
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Simulation metadata and configuration
+  
+  <Expandable title="metadata properties">
+    <ResponseField name="metadata.prompt" type="string">
+      Original prompt used to generate the simulation
+    </ResponseField>
+    
+    <ResponseField name="metadata.created_at" type="string">
+      ISO 8601 timestamp when simulation was created
+    </ResponseField>
+    
+    <ResponseField name="metadata.completed_at" type="string">
+      ISO 8601 timestamp when simulation was completed
+    </ResponseField>
+    
+    <ResponseField name="metadata.generation_time" type="integer">
+      Total generation time in seconds
+    </ResponseField>
+    
+    <ResponseField name="metadata.settings" type="object">
+      Simulation settings used during generation
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="environment" type="object">
+  Environment and terrain data
+  
+  <Expandable title="environment properties">
+    <ResponseField name="environment.bounds" type="object">
+      Geographic bounds of the simulation area
+    </ResponseField>
+    
+    <ResponseField name="environment.terrain" type="object">
+      Terrain mesh and elevation data
+    </ResponseField>
+    
+    <ResponseField name="environment.weather" type="object">
+      Weather conditions and atmospheric settings
+    </ResponseField>
+    
+    <ResponseField name="environment.lighting" type="object">
+      Lighting configuration and time of day
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="actors" type="array">
+  Array of all actors (agents) in the simulation
+  
+  <Expandable title="actor properties">
+    <ResponseField name="actors[].id" type="string">
+      Unique identifier for the actor
+    </ResponseField>
+    
+    <ResponseField name="actors[].type" type="string">
+      Actor type: `pedestrian`, `vehicle`, `building`, `object`
+    </ResponseField>
+    
+    <ResponseField name="actors[].position" type="array">
+      3D position coordinates [x, y, z]
+    </ResponseField>
+    
+    <ResponseField name="actors[].properties" type="object">
+      Actor-specific properties and attributes
+    </ResponseField>
+    
+    <ResponseField name="actors[].behavior" type="object">
+      Behavioral configuration and AI parameters
+    </ResponseField>
+    
+    <ResponseField name="actors[].model" type="object">
+      3D model and visual representation data
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="features" type="array">
+  Geographic and structural features
+  
+  <Expandable title="feature properties">
+    <ResponseField name="features[].id" type="string">
+      Unique identifier for the feature
+    </ResponseField>
+    
+    <ResponseField name="features[].type" type="string">
+      Feature type: `building`, `road`, `landmark`, `vegetation`
+    </ResponseField>
+    
+    <ResponseField name="features[].geometry" type="object">
+      GeoJSON geometry defining the feature shape
+    </ResponseField>
+    
+    <ResponseField name="features[].properties" type="object">
+      Feature-specific properties and metadata
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="assets" type="object">
+  3D models, textures, and other simulation assets
+  
+  <Expandable title="assets properties">
+    <ResponseField name="assets.models" type="array">
+      Array of 3D model files and references
+    </ResponseField>
+    
+    <ResponseField name="assets.textures" type="array">
+      Texture files and material definitions
+    </ResponseField>
+    
+    <ResponseField name="assets.sounds" type="array">
+      Audio files for environmental sounds
+    </ResponseField>
+    
+    <ResponseField name="assets.animations" type="array">
+      Animation sequences for dynamic elements
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "status": "completed",
+  "metadata": {
+    "prompt": "Create a busy downtown intersection with pedestrians crossing, cars waiting at traffic lights, and a food truck on the corner",
+    "created_at": "2024-01-15T10:30:00Z",
+    "completed_at": "2024-01-15T10:35:42Z",
+    "generation_time": 342,
+    "settings": {
+      "max_agents": 100,
+      "simulation_duration": 300,
+      "environment_type": "urban",
+      "weather_conditions": "clear"
+    }
+  },
+  "environment": {
+    "bounds": {
+      "min_lat": 37.7749,
+      "max_lat": 37.7759,
+      "min_lng": -122.4194,
+      "max_lng": -122.4184,
+      "min_elevation": 0,
+      "max_elevation": 15
+    },
+    "terrain": {
+      "mesh_url": "https://assets.worldlens.co/sim_abc123def456/terrain.gltf",
+      "elevation_data": "https://assets.worldlens.co/sim_abc123def456/elevation.tif"
+    },
+    "weather": {
+      "condition": "clear",
+      "temperature": 22,
+      "humidity": 65,
+      "wind_speed": 5
+    },
+    "lighting": {
+      "time_of_day": "14:30",
+      "sun_position": [45, 180],
+      "ambient_intensity": 0.4
+    }
+  },
+  "actors": [
+    {
+      "id": "actor_001",
+      "type": "pedestrian",
+      "position": [37.7754, -122.4189, 1.7],
+      "properties": {
+        "age": "adult",
+        "gender": "female",
+        "clothing": "casual",
+        "walking_speed": 1.2
+      },
+      "behavior": {
+        "goal": "cross_street",
+        "path": [[37.7754, -122.4189], [37.7754, -122.4187]],
+        "state": "walking"
+      },
+      "model": {
+        "mesh_url": "https://assets.worldlens.co/models/pedestrian_female_01.gltf",
+        "animations": ["walk", "idle", "look_around"]
+      }
+    },
+    {
+      "id": "actor_002",
+      "type": "vehicle",
+      "position": [37.7752, -122.4190, 0.5],
+      "properties": {
+        "vehicle_type": "sedan",
+        "color": "blue",
+        "license_plate": "ABC123"
+      },
+      "behavior": {
+        "goal": "proceed_straight",
+        "state": "waiting_at_light",
+        "speed": 0
+      },
+      "model": {
+        "mesh_url": "https://assets.worldlens.co/models/sedan_blue.gltf",
+        "animations": ["idle", "drive"]
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "feature_001",
+      "type": "building",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[37.7750, -122.4192], [37.7750, -122.4188], [37.7756, -122.4188], [37.7756, -122.4192], [37.7750, -122.4192]]]
+      },
+      "properties": {
+        "height": 25,
+        "building_type": "commercial",
+        "floors": 6
+      }
+    },
+    {
+      "id": "feature_002",
+      "type": "road",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[37.7748, -122.4189], [37.7760, -122.4189]]
+      },
+      "properties": {
+        "road_type": "street",
+        "lanes": 2,
+        "speed_limit": 25
+      }
+    }
+  ],
+  "assets": {
+    "models": [
+      {
+        "id": "terrain_mesh",
+        "url": "https://assets.worldlens.co/sim_abc123def456/terrain.gltf",
+        "format": "gltf",
+        "size_mb": 2.4
+      }
+    ],
+    "textures": [
+      {
+        "id": "asphalt_texture",
+        "url": "https://assets.worldlens.co/textures/asphalt_01.jpg",
+        "resolution": "1024x1024"
+      }
+    ],
+    "sounds": [
+      {
+        "id": "traffic_ambient",
+        "url": "https://assets.worldlens.co/sounds/traffic_ambient.mp3",
+        "duration": 120
+      }
+    ]
+  }
+}
+```
+
+## Export Formats
+
+### GeoJSON Format
+When `format=geojson`, the response contains geographic data in GeoJSON format:
+
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.4189, 37.7754]
+      },
+      "properties": {
+        "type": "pedestrian",
+        "id": "actor_001",
+        "behavior": "walking"
+      }
+    }
+  ]
+}
+```
+
+### 3D Model Formats
+When `format=gltf` or `format=fbx`, the response includes download URLs for 3D model files:
+
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "format": "gltf",
+  "download_url": "https://assets.worldlens.co/sim_abc123def456/complete_scene.gltf",
+  "assets": {
+    "textures": "https://assets.worldlens.co/sim_abc123def456/textures.zip",
+    "animations": "https://assets.worldlens.co/sim_abc123def456/animations.zip"
+  },
+  "expires_at": "2024-01-16T10:35:42Z"
+}
+```
+
+## Status Codes
+
+<ResponseField name="200" type="OK">
+  Simulation results retrieved successfully
+</ResponseField>
+
+<ResponseField name="202" type="Accepted">
+  Simulation is still processing (not yet completed)
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Simulation not found
+</ResponseField>
+
+<ResponseField name="410" type="Gone">
+  Simulation results have expired and are no longer available
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error retrieving results
+</ResponseField>
+
+## Data Retention
+
+- **Simulation results** are stored for 30 days after completion
+- **3D model assets** are available for download for 7 days
+- **Premium users** get extended retention periods
+- **Enterprise users** can configure custom retention policies
+
+## Integration Examples
+
+### Unity Integration
+```csharp
+// C# example for Unity
+public async Task<SimulationData> LoadSimulation(string simulationId)
+{
+    var client = new HttpClient();
+    client.DefaultRequestHeaders.Add("Authorization", "Api-Key YOUR_API_KEY");
+    
+    var response = await client.GetAsync($"https://api.worldlens.co/api/v1/simulations/{simulationId}/");
+    var json = await response.Content.ReadAsStringAsync();
+    
+    return JsonUtility.FromJson<SimulationData>(json);
+}
+```
+
+### Web Visualization
+```javascript
+// JavaScript example for web applications
+async function loadSimulation(simulationId) {
+    const response = await fetch(`https://api.worldlens.co/api/v1/simulations/${simulationId}/`, {
+        headers: {
+            'Authorization': 'Api-Key YOUR_API_KEY'
+        }
+    });
+    
+    const simulationData = await response.json();
+    
+    // Load into Three.js scene
+    loadActorsIntoScene(simulationData.actors);
+    loadEnvironmentIntoScene(simulationData.environment);
+}
+```
+
+## Next Steps
+
+- Learn about [Risk Analysis](/api-reference/simulation/risk-analysis) to add safety assessments
+- Explore [Urban Mobility MARL](/api-reference/marl/websocket-overview) for real-time simulations
+- Check out integration guides for popular 3D engines and frameworks 

@@ -1,0 +1,339 @@
+---
+title: "Urban Mobility MARL WebSocket"
+description: "Real-time multi-agent reinforcement learning for urban mobility simulations"
+---
+
+## Overview
+
+The Urban Mobility MARL (Multi-Agent Reinforcement Learning) WebSocket API provides real-time control and interaction with dynamic urban mobility simulations. This system enables you to create, modify, and observe complex multi-agent scenarios involving pedestrians, vehicles, and environmental stimuli in real-time.
+
+## Key Features
+
+- **Real-time Agent Control**: Dynamically add, remove, and modify agents during simulation
+- **Multi-Agent Types**: Support for pedestrians, vehicles, and public transport
+- **Environmental Stimuli**: Add emergency scenarios like evacuations or disasters
+- **Pathfinding**: Intelligent routing using real-world road networks
+- **Geospatial Integration**: Uses actual geographic data and elevation models
+- **Scalable**: Handle thousands of agents simultaneously
+
+## Connection
+
+Connect to the WebSocket endpoint to start interacting with the MARL system:
+
+```
+ws://api.worldlens.co:8001/ws/marl_state
+```
+
+<Note>
+The WebSocket server runs on port 8001 by default. For production environments, use the secure WebSocket protocol (wss://) when available.
+</Note>
+
+## Agent Types
+
+The system supports multiple agent types, each with unique behaviors:
+
+| Type ID | Name | Description |
+|---------|------|-------------|
+| `0` | Pedestrian | Individual walking agents with basic pathfinding |
+| `1` | Vehicle | Cars, trucks, and other road vehicles following traffic rules |
+| `2` | Public Transport | Buses, trains, and other mass transit (planned feature) |
+
+## Simulation Flow
+
+### 1. Connection & Initialization
+```javascript
+const ws = new WebSocket('ws://api.worldlens.co:8001/ws/marl_state');
+
+ws.onopen = function() {
+    console.log('Connected to MARL WebSocket');
+    
+    // Request initial agent population
+    ws.send(JSON.stringify({
+        type: 'request_initial_agents',
+        payload: {
+            focus_latitude: 37.7749,
+            focus_longitude: -122.4194
+        }
+    }));
+};
+```
+
+### 2. Receive Agent Data
+```javascript
+ws.onmessage = function(event) {
+    const message = JSON.parse(event.data);
+    
+    switch(message.type) {
+        case 'add_agent':
+            addAgentToScene(message.payload);
+            break;
+        case 'initial_population_complete':
+            console.log(`Loaded ${message.payload.count} agents`);
+            break;
+        // Handle other message types...
+    }
+};
+```
+
+### 3. Dynamic Interaction
+```javascript
+// Request new path for an agent
+function requestNewPath(agentId) {
+    ws.send(JSON.stringify({
+        type: 'request_new_path',
+        payload: {
+            agent_id: agentId
+        }
+    }));
+}
+
+// Activate emergency stimulus
+function activateEmergency(lat, lng) {
+    ws.send(JSON.stringify({
+        type: 'set_stimulus',
+        payload: {
+            active: true,
+            location: [lat, lng]
+        }
+    }));
+}
+```
+
+## Agent Properties
+
+Each agent contains comprehensive data for realistic simulation:
+
+### Basic Properties
+- **ID**: Unique identifier (`sim_agent_123`)
+- **Position**: Geographic coordinates `[latitude, longitude]`
+- **Velocity**: Movement vector `[dLat, dLng]`
+- **Type**: Agent type (0=pedestrian, 1=vehicle)
+- **Goal**: Target destination coordinates
+
+### Behavioral Properties
+- **Path**: Array of waypoint coordinates for vehicles
+- **Fleeing Status**: Whether agent is responding to emergency stimulus
+- **State**: Current behavioral state (walking, driving, waiting, etc.)
+
+### Visual Properties
+- **Model References**: 3D model URLs and animation data
+- **Attributes**: Customizable properties for appearance and behavior
+
+## Geospatial Features
+
+### Real-World Data Integration
+- **OpenStreetMap**: Road networks and building footprints
+- **Elevation Models**: Terrain height data for realistic positioning
+- **Geographic Bounds**: Configurable simulation areas
+
+### Coordinate Systems
+- **Input/Output**: Geographic coordinates (WGS84)
+- **Internal Processing**: Projected coordinates for performance
+- **3D Positioning**: Includes elevation data for vertical accuracy
+
+## Performance Considerations
+
+### Scalability
+- **Agent Limits**: Up to 1,000 agents per simulation (configurable)
+- **Update Frequency**: Real-time updates with minimal latency
+- **Memory Management**: Efficient spatial indexing and culling
+
+### Network Optimization
+- **Message Batching**: Multiple updates combined when possible
+- **Compression**: JSON payload optimization
+- **Connection Management**: Automatic reconnection and heartbeat
+
+## Use Cases
+
+### Emergency Response Planning
+Simulate evacuation scenarios with dynamic obstacles and changing conditions:
+
+```javascript
+// Create emergency evacuation scenario
+ws.send(JSON.stringify({
+    type: 'set_stimulus',
+    payload: {
+        active: true,
+        location: [37.7749, -122.4194] // Emergency location
+    }
+}));
+```
+
+### Traffic Flow Analysis
+Study traffic patterns and congestion with realistic vehicle behavior:
+
+```javascript
+// Request initial population focused on traffic intersection
+ws.send(JSON.stringify({
+    type: 'request_initial_agents',
+    payload: {
+        focus_latitude: 37.7849,
+        focus_longitude: -122.4094
+    }
+}));
+```
+
+### Urban Planning
+Test infrastructure changes and their impact on mobility:
+
+```javascript
+// Monitor agent paths to analyze route efficiency
+ws.onmessage = function(event) {
+    const message = JSON.parse(event.data);
+    if (message.type === 'new_path') {
+        analyzeRouteEfficiency(message.payload.path_coords);
+    }
+};
+```
+
+### Crowd Dynamics
+Study pedestrian flow in public spaces and events:
+
+```javascript
+// Focus simulation on pedestrian-heavy area
+ws.send(JSON.stringify({
+    type: 'request_initial_agents',
+    payload: {
+        focus_latitude: 37.7849,  // Union Square
+        focus_longitude: -122.4094
+    }
+}));
+```
+
+## Integration Examples
+
+### Three.js Visualization
+```javascript
+import * as THREE from 'three';
+
+class MARLVisualizer {
+    constructor() {
+        this.scene = new THREE.Scene();
+        this.agents = new Map();
+        this.ws = new WebSocket('ws://api.worldlens.co:8001/ws/marl_state');
+        
+        this.ws.onmessage = (event) => {
+            this.handleMessage(JSON.parse(event.data));
+        };
+    }
+    
+    handleMessage(message) {
+        switch(message.type) {
+            case 'add_agent':
+                this.addAgent(message.payload);
+                break;
+            case 'new_path':
+                this.updateAgentPath(message.payload);
+                break;
+            case 'update_flee_status':
+                this.updateFleeStatus(message.payload);
+                break;
+        }
+    }
+    
+    addAgent(agentData) {
+        const geometry = agentData.type === 1 ? 
+            new THREE.BoxGeometry(2, 1, 4) :  // Vehicle
+            new THREE.CylinderGeometry(0.3, 0.3, 1.7); // Pedestrian
+            
+        const material = new THREE.MeshBasicMaterial({
+            color: agentData.is_fleeing ? 0xff0000 : 0x00ff00
+        });
+        
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        // Convert lat/lng to scene coordinates
+        const position = this.geoToScene(agentData.position);
+        mesh.position.set(position.x, position.y, position.z);
+        
+        this.scene.add(mesh);
+        this.agents.set(agentData.id, mesh);
+    }
+}
+```
+
+### Unity Integration
+```csharp
+using System;
+using UnityEngine;
+using WebSocketSharp;
+using Newtonsoft.Json;
+
+public class MARLController : MonoBehaviour 
+{
+    private WebSocket ws;
+    private Dictionary<string, GameObject> agents = new Dictionary<string, GameObject>();
+    
+    void Start() 
+    {
+        ws = new WebSocket("ws://api.worldlens.co:8001/ws/marl_state");
+        
+        ws.OnMessage += (sender, e) => {
+            var message = JsonConvert.DeserializeObject<MARLMessage>(e.Data);
+            HandleMessage(message);
+        };
+        
+        ws.Connect();
+        
+        // Request initial agents
+        var request = new {
+            type = "request_initial_agents",
+            payload = new {
+                focus_latitude = 37.7749,
+                focus_longitude = -122.4194
+            }
+        };
+        
+        ws.Send(JsonConvert.SerializeObject(request));
+    }
+    
+    void HandleMessage(MARLMessage message) 
+    {
+        switch(message.type) 
+        {
+            case "add_agent":
+                CreateAgent(message.payload);
+                break;
+            case "new_path":
+                UpdateAgentPath(message.payload);
+                break;
+        }
+    }
+}
+```
+
+## Error Handling
+
+### Connection Issues
+```javascript
+ws.onerror = function(error) {
+    console.error('WebSocket error:', error);
+    // Implement reconnection logic
+    setTimeout(() => {
+        connectToMARL();
+    }, 5000);
+};
+
+ws.onclose = function(event) {
+    console.log('WebSocket closed:', event.code, event.reason);
+    // Handle graceful shutdown or reconnection
+};
+```
+
+### Message Validation
+```javascript
+function validateMessage(message) {
+    if (!message.type || !message.payload) {
+        console.error('Invalid message format:', message);
+        return false;
+    }
+    return true;
+}
+```
+
+## Next Steps
+
+- Learn about [Client Messages](/api-reference/marl/client-messages) you can send to the server
+- Understand [Server Messages](/api-reference/marl/server-messages) you'll receive
+- Explore [Risk Analysis](/api-reference/risk/route-analysis) integration for enhanced simulations
+- Check out [Simulation APIs](/api-reference/simulation/text-to-3d) for pre-generated scenarios 

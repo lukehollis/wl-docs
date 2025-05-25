@@ -1,0 +1,468 @@
+---
+title: "Route Risk Analysis"
+api: "POST https://api.worldlens.co/risk-assessment/"
+description: "Assess potential risks and threats along a specified route"
+---
+
+## Overview
+
+The Route Risk Analysis API evaluates potential threats and hazards along a specified path or route. This endpoint analyzes various risk factors including geopolitical events, environmental hazards, infrastructure conditions, and real-time threat data to provide comprehensive risk assessments.
+
+## Authentication
+
+<CodeGroup>
+```bash API Key
+curl -X POST "https://api.worldlens.co/risk-assessment/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+```bash Token
+curl -X POST "https://api.worldlens.co/risk-assessment/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+```bash Anonymous
+curl -X POST "https://api.worldlens.co/risk-assessment/" \
+  -H "Content-Type: application/json"
+```
+</CodeGroup>
+
+<Note>
+This endpoint supports anonymous access for basic risk assessments, though authenticated requests receive more detailed analysis.
+</Note>
+
+## Request Body
+
+<ParamField body="routePoints" type="array" required>
+  Array of coordinate points defining the route to analyze. Each point should contain latitude and longitude.
+  
+  <Expandable title="routePoints structure">
+    <ParamField body="routePoints[].lat" type="number" required>
+      Latitude coordinate (-90 to 90)
+    </ParamField>
+    
+    <ParamField body="routePoints[].lng" type="number" required>
+      Longitude coordinate (-180 to 180)
+    </ParamField>
+    
+    <ParamField body="routePoints[].timestamp" type="string">
+      Optional ISO 8601 timestamp for time-specific risk analysis
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="riskTypes" type="array">
+  Optional array of specific risk types to analyze. If not provided, all risk types are assessed.
+  
+  Available types: `geopolitical`, `environmental`, `infrastructure`, `crime`, `traffic`, `weather`
+</ParamField>
+
+<ParamField body="timeWindow" type="object">
+  Optional time window for temporal risk analysis
+  
+  <Expandable title="timeWindow properties">
+    <ParamField body="timeWindow.start" type="string">
+      Start time in ISO 8601 format
+    </ParamField>
+    
+    <ParamField body="timeWindow.end" type="string">
+      End time in ISO 8601 format
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="medium">
+  Analysis resolution: `low`, `medium`, `high`
+  - `low`: Basic risk assessment with major threats only
+  - `medium`: Standard assessment with moderate detail
+  - `high`: Comprehensive assessment with fine-grained analysis
+</ParamField>
+
+## Example Requests
+
+<CodeGroup>
+```bash Basic Route Analysis
+curl -X POST "https://api.worldlens.co/risk-assessment/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routePoints": [
+      {"lat": 37.7749, "lng": -122.4194},
+      {"lat": 37.7849, "lng": -122.4094},
+      {"lat": 37.7949, "lng": -122.3994}
+    ]
+  }'
+```
+
+```bash Comprehensive Analysis
+curl -X POST "https://api.worldlens.co/risk-assessment/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routePoints": [
+      {"lat": 37.7749, "lng": -122.4194, "timestamp": "2024-01-15T14:00:00Z"},
+      {"lat": 37.7849, "lng": -122.4094, "timestamp": "2024-01-15T14:15:00Z"},
+      {"lat": 37.7949, "lng": -122.3994, "timestamp": "2024-01-15T14:30:00Z"}
+    ],
+    "riskTypes": ["geopolitical", "environmental", "crime"],
+    "timeWindow": {
+      "start": "2024-01-15T12:00:00Z",
+      "end": "2024-01-15T18:00:00Z"
+    },
+    "resolution": "high"
+  }'
+```
+
+```bash Flight Path Analysis
+curl -X POST "https://api.worldlens.co/risk-assessment/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routePoints": [
+      {"lat": 40.7128, "lng": -74.0060},
+      {"lat": 41.8781, "lng": -87.6298},
+      {"lat": 39.7392, "lng": -104.9903},
+      {"lat": 34.0522, "lng": -118.2437}
+    ],
+    "riskTypes": ["weather", "geopolitical", "infrastructure"],
+    "resolution": "high"
+  }'
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="riskPoints" type="array">
+  Array of risk assessment points along the route
+  
+  <Expandable title="riskPoints structure">
+    <ResponseField name="riskPoints[].lat" type="number">
+      Latitude coordinate of the risk point
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].lng" type="number">
+      Longitude coordinate of the risk point
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].weight" type="number">
+      Risk weight/score (0.0 to 1.0, where 1.0 is highest risk)
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].riskLevel" type="string">
+      Categorical risk level: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="riskPoints[].threats" type="array">
+      Array of specific threats identified at this location
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="summary" type="object">
+  Overall route risk summary
+  
+  <Expandable title="summary properties">
+    <ResponseField name="summary.overallRisk" type="string">
+      Overall route risk level: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="summary.maxRiskWeight" type="number">
+      Highest risk weight found along the route
+    </ResponseField>
+    
+    <ResponseField name="summary.averageRisk" type="number">
+      Average risk weight across all points
+    </ResponseField>
+    
+    <ResponseField name="summary.totalDistance" type="number">
+      Total route distance in kilometers
+    </ResponseField>
+    
+    <ResponseField name="summary.highRiskSegments" type="integer">
+      Number of high-risk segments identified
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="threats" type="array">
+  Detailed threat information
+  
+  <Expandable title="threats structure">
+    <ResponseField name="threats[].id" type="string">
+      Unique threat identifier
+    </ResponseField>
+    
+    <ResponseField name="threats[].type" type="string">
+      Threat category
+    </ResponseField>
+    
+    <ResponseField name="threats[].severity" type="string">
+      Threat severity: `low`, `medium`, `high`, `critical`
+    </ResponseField>
+    
+    <ResponseField name="threats[].description" type="string">
+      Human-readable threat description
+    </ResponseField>
+    
+    <ResponseField name="threats[].location" type="object">
+      Geographic location of the threat
+    </ResponseField>
+    
+    <ResponseField name="threats[].timeframe" type="object">
+      Temporal information about the threat
+    </ResponseField>
+    
+    <ResponseField name="threats[].confidence" type="number">
+      Confidence score for the threat assessment (0.0 to 1.0)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="recommendations" type="array">
+  Risk mitigation recommendations
+  
+  <Expandable title="recommendations structure">
+    <ResponseField name="recommendations[].type" type="string">
+      Recommendation type: `route_change`, `timing_adjustment`, `precaution`, `equipment`
+    </ResponseField>
+    
+    <ResponseField name="recommendations[].priority" type="string">
+      Priority level: `low`, `medium`, `high`, `urgent`
+    </ResponseField>
+    
+    <ResponseField name="recommendations[].description" type="string">
+      Detailed recommendation description
+    </ResponseField>
+    
+    <ResponseField name="recommendations[].alternativeRoute" type="array">
+      Alternative route coordinates (if applicable)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "riskPoints": [
+    {
+      "lat": 37.7749,
+      "lng": -122.4194,
+      "weight": 0.2,
+      "riskLevel": "low",
+      "threats": ["minor_traffic_congestion"]
+    },
+    {
+      "lat": 37.7849,
+      "lng": -122.4094,
+      "weight": 0.7,
+      "riskLevel": "high",
+      "threats": ["active_protest", "road_closure"]
+    },
+    {
+      "lat": 37.7949,
+      "lng": -122.3994,
+      "weight": 0.3,
+      "riskLevel": "medium",
+      "threats": ["construction_zone"]
+    }
+  ],
+  "summary": {
+    "overallRisk": "high",
+    "maxRiskWeight": 0.7,
+    "averageRisk": 0.4,
+    "totalDistance": 15.2,
+    "highRiskSegments": 1
+  },
+  "threats": [
+    {
+      "id": "threat_001",
+      "type": "geopolitical",
+      "severity": "high",
+      "description": "Large protest gathering with potential for civil unrest",
+      "location": {
+        "lat": 37.7849,
+        "lng": -122.4094,
+        "radius": 500
+      },
+      "timeframe": {
+        "start": "2024-01-15T13:00:00Z",
+        "end": "2024-01-15T17:00:00Z"
+      },
+      "confidence": 0.85
+    },
+    {
+      "id": "threat_002",
+      "type": "infrastructure",
+      "severity": "medium",
+      "description": "Road construction causing lane closures",
+      "location": {
+        "lat": 37.7949,
+        "lng": -122.3994,
+        "radius": 200
+      },
+      "timeframe": {
+        "start": "2024-01-15T08:00:00Z",
+        "end": "2024-01-15T18:00:00Z"
+      },
+      "confidence": 0.95
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "route_change",
+      "priority": "high",
+      "description": "Consider alternative route to avoid protest area",
+      "alternativeRoute": [
+        {"lat": 37.7749, "lng": -122.4194},
+        {"lat": 37.7799, "lng": -122.4144},
+        {"lat": 37.7949, "lng": -122.3994}
+      ]
+    },
+    {
+      "type": "timing_adjustment",
+      "priority": "medium",
+      "description": "Delay travel until after 17:00 to avoid peak protest activity"
+    },
+    {
+      "type": "precaution",
+      "priority": "medium",
+      "description": "Monitor real-time traffic updates for construction delays"
+    }
+  ]
+}
+```
+
+## Risk Types
+
+### Geopolitical Risks
+- Political demonstrations and protests
+- Civil unrest and conflicts
+- Border tensions and restrictions
+- Government instability
+
+### Environmental Risks
+- Natural disasters (earthquakes, floods, storms)
+- Extreme weather conditions
+- Environmental hazards (pollution, radiation)
+- Climate-related threats
+
+### Infrastructure Risks
+- Road closures and construction
+- Bridge and tunnel conditions
+- Public transportation disruptions
+- Utility outages
+
+### Crime Risks
+- High crime areas
+- Recent criminal activity
+- Security incidents
+- Theft and violence hotspots
+
+### Traffic Risks
+- Congestion patterns
+- Accident-prone areas
+- Rush hour impacts
+- Special event traffic
+
+### Weather Risks
+- Current weather conditions
+- Weather forecasts
+- Seasonal weather patterns
+- Extreme weather alerts
+
+## Status Codes
+
+<ResponseField name="200" type="OK">
+  Risk analysis completed successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid route points or request parameters
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or missing API key (for authenticated features)
+</ResponseField>
+
+<ResponseField name="429" type="Too Many Requests">
+  Rate limit exceeded
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error during risk analysis
+</ResponseField>
+
+## Error Response
+
+```json
+{
+  "error": "Invalid route points: Route must contain at least 2 points",
+  "code": "INVALID_ROUTE_POINTS",
+  "details": {
+    "field": "routePoints",
+    "min_points": 2,
+    "provided_points": 1
+  }
+}
+```
+
+## Integration Examples
+
+### JavaScript/Web
+```javascript
+async function analyzeRoute(routePoints) {
+    const response = await fetch('https://api.worldlens.co/risk-assessment/', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Api-Key YOUR_API_KEY',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            routePoints: routePoints,
+            resolution: 'high'
+        })
+    });
+    
+    const riskData = await response.json();
+    
+    // Visualize risk points on map
+    riskData.riskPoints.forEach(point => {
+        addRiskMarker(point.lat, point.lng, point.weight);
+    });
+}
+```
+
+### Python
+```python
+import requests
+
+def analyze_route_risk(route_points, api_key):
+    url = "https://api.worldlens.co/risk-assessment/"
+    headers = {
+        "Authorization": f"Api-Key {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "routePoints": route_points,
+        "resolution": "high"
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+    return response.json()
+
+# Example usage
+route = [
+    {"lat": 37.7749, "lng": -122.4194},
+    {"lat": 37.7849, "lng": -122.4094}
+]
+risk_analysis = analyze_route_risk(route, "your_api_key")
+```
+
+## Next Steps
+
+- Explore [Radius Risk Analysis](/api-reference/risk/radius-analysis) for area-based assessments
+- Learn about [Urban Mobility MARL](/api-reference/marl/websocket-overview) for dynamic risk modeling
+- Check out [Simulation APIs](/api-reference/simulation/text-to-3d) for scenario planning 

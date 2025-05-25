@@ -1,0 +1,220 @@
+---
+title: "Text to 3D Simulation"
+api: "POST https://api.worldlens.co/api/v1/simulations/"
+description: "Create immersive 3D simulations from natural language descriptions"
+---
+
+## Overview
+
+The Text to 3D Simulation API transforms natural language prompts into fully interactive 3D simulations. This endpoint leverages advanced AI to interpret your description and generate a complete simulation environment with actors, terrain, and dynamic elements.
+
+## Authentication
+
+<CodeGroup>
+```bash API Key
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+```bash Token
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json"
+```
+</CodeGroup>
+
+## Request Body
+
+<ParamField body="prompt" type="string" required>
+  Natural language description of the simulation you want to create. Be specific about the environment, actors, and scenarios you envision.
+</ParamField>
+
+<ParamField body="webhook_url" type="string">
+  Optional webhook URL to receive notifications when the simulation is complete. Must be a valid HTTPS URL.
+</ParamField>
+
+<ParamField body="settings" type="object">
+  Optional simulation settings to customize the generation process.
+  
+  <Expandable title="settings properties">
+    <ParamField body="settings.max_agents" type="integer" default="100">
+      Maximum number of agents to include in the simulation (1-1000)
+    </ParamField>
+    
+    <ParamField body="settings.simulation_duration" type="integer" default="300">
+      Simulation duration in seconds (60-3600)
+    </ParamField>
+    
+    <ParamField body="settings.environment_type" type="string" default="urban">
+      Type of environment: `urban`, `rural`, `indoor`, `mixed`
+    </ParamField>
+    
+    <ParamField body="settings.weather_conditions" type="string" default="clear">
+      Weather conditions: `clear`, `rain`, `snow`, `fog`, `storm`
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Example Requests
+
+<CodeGroup>
+```bash Basic Simulation
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Create a busy downtown intersection with pedestrians crossing, cars waiting at traffic lights, and a food truck on the corner"
+  }'
+```
+
+```bash Advanced Simulation
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Simulate an emergency evacuation scenario in a shopping mall with multiple exits, crowds of people, and emergency vehicles arriving",
+    "webhook_url": "https://your-app.com/webhooks/simulation-complete",
+    "settings": {
+      "max_agents": 500,
+      "simulation_duration": 600,
+      "environment_type": "indoor",
+      "weather_conditions": "clear"
+    }
+  }'
+```
+
+```bash Disaster Scenario
+curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+  -H "Authorization: Api-Key YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Model a flood evacuation in a coastal town with rising water levels, emergency responders, and residents moving to higher ground",
+    "settings": {
+      "max_agents": 300,
+      "simulation_duration": 900,
+      "environment_type": "mixed",
+      "weather_conditions": "storm"
+    }
+  }'
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="simulation_id" type="string">
+  Unique identifier for the created simulation
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status of the simulation: `queued`, `processing`, `completed`, `failed`
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp when the simulation was created
+</ResponseField>
+
+<ResponseField name="estimated_completion_time" type="string">
+  Estimated completion time in ISO 8601 format
+</ResponseField>
+
+<ResponseField name="prompt" type="string">
+  The original prompt used to generate the simulation
+</ResponseField>
+
+<ResponseField name="settings" type="object">
+  The simulation settings used for generation
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "simulation_id": "sim_abc123def456",
+  "status": "queued",
+  "created_at": "2024-01-15T10:30:00Z",
+  "estimated_completion_time": "2024-01-15T10:35:00Z",
+  "prompt": "Create a busy downtown intersection with pedestrians crossing, cars waiting at traffic lights, and a food truck on the corner",
+  "settings": {
+    "max_agents": 100,
+    "simulation_duration": 300,
+    "environment_type": "urban",
+    "weather_conditions": "clear"
+  }
+}
+```
+
+## Status Codes
+
+<ResponseField name="201" type="Created">
+  Simulation successfully queued for processing
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid request parameters or malformed prompt
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or missing API key
+</ResponseField>
+
+<ResponseField name="429" type="Too Many Requests">
+  Rate limit exceeded
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error during simulation creation
+</ResponseField>
+
+## Error Response
+
+```json
+{
+  "error": "Invalid prompt: Prompt must be at least 10 characters long",
+  "code": "INVALID_PROMPT",
+  "details": {
+    "field": "prompt",
+    "min_length": 10,
+    "provided_length": 5
+  }
+}
+```
+
+## Webhook Notifications
+
+If you provide a `webhook_url`, you'll receive POST notifications at key simulation milestones:
+
+### Simulation Started
+```json
+{
+  "event": "simulation.started",
+  "simulation_id": "sim_abc123def456",
+  "timestamp": "2024-01-15T10:30:30Z"
+}
+```
+
+### Simulation Completed
+```json
+{
+  "event": "simulation.completed",
+  "simulation_id": "sim_abc123def456",
+  "timestamp": "2024-01-15T10:35:15Z",
+  "result_url": "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/"
+}
+```
+
+### Simulation Failed
+```json
+{
+  "event": "simulation.failed",
+  "simulation_id": "sim_abc123def456",
+  "timestamp": "2024-01-15T10:32:45Z",
+  "error": "Failed to generate terrain from prompt"
+}
+```
+
+## Next Steps
+
+- Check simulation status using the [Status API](/api-reference/simulation/status)
+- Retrieve completed results with the [Results API](/api-reference/simulation/results)
+- Learn about [Risk Analysis](/api-reference/risk/route-analysis) for safety assessments 
