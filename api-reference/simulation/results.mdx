@@ -72,7 +72,7 @@ curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/?forma
 ## Response (JSON Format)
 
 <ResponseField name="simulation_id" type="string">
-  The unique identifier of the simulation
+  The unique identifier of the simulation ("id")
 </ResponseField>
 
 <ResponseField name="status" type="string">
@@ -205,7 +205,7 @@ curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/?forma
 
 ```json
 {
-  "simulation_id": "sim_abc123def456",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "completed",
   "metadata": {
     "prompt": "Create a busy downtown intersection with pedestrians crossing, cars waiting at traffic lights, and a food truck on the corner",
@@ -370,7 +370,7 @@ When `format=gltf` or `format=fbx`, the response includes download URLs for 3D m
 
 ```json
 {
-  "simulation_id": "sim_abc123def456",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "format": "gltf",
   "download_url": "https://assets.worldlens.co/sim_abc123def456/complete_scene.gltf",
   "assets": {

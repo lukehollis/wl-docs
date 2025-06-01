@@ -103,7 +103,11 @@ curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
 ## Response
 
 <ResponseField name="simulation_id" type="string">
-  Unique identifier for the created simulation
+  Unique identifier for the created simulation ("id")
+</ResponseField>
+
+<ResponseField name="slug" type="string">
+  URL-friendly slug for the simulation, useful in web UIs
 </ResponseField>
 
 <ResponseField name="status" type="string">
@@ -114,33 +118,24 @@ curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
   ISO 8601 timestamp when the simulation was created
 </ResponseField>
 
-<ResponseField name="estimated_completion_time" type="string">
-  Estimated completion time in ISO 8601 format
+<ResponseField name="status_url" type="string">
+  Absolute URL to poll build status
 </ResponseField>
 
-<ResponseField name="prompt" type="string">
-  The original prompt used to generate the simulation
-</ResponseField>
-
-<ResponseField name="settings" type="object">
-  The simulation settings used for generation
+<ResponseField name="result_url" type="string">
+  Absolute URL to fetch completed simulation data (null until `status == completed`)
 </ResponseField>
 
 ## Example Response
 
 ```json
 {
-  "simulation_id": "sim_abc123def456",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "slug": "busy-downtown-intersection",
   "status": "queued",
   "created_at": "2024-01-15T10:30:00Z",
-  "estimated_completion_time": "2024-01-15T10:35:00Z",
-  "prompt": "Create a busy downtown intersection with pedestrians crossing, cars waiting at traffic lights, and a food truck on the corner",
-  "settings": {
-    "max_agents": 100,
-    "simulation_duration": 300,
-    "environment_type": "urban",
-    "weather_conditions": "clear"
-  }
+  "status_url": "/api/v1/simulations/123e4567-e89b-12d3-a456-426614174000/status/",
+  "result_url": "/api/v1/simulations/123e4567-e89b-12d3-a456-426614174000/"
 }
 ```
 
