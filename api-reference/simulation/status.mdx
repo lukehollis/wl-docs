@@ -1,6 +1,6 @@
 ---
 title: "Simulation Status"
-api: "GET https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/"
+api: "GET https://api.vects.ai/api/v1/simulations/{simulation_id}/status/"
 description: "Check the current status and progress of a simulation"
 ---
 
@@ -12,17 +12,17 @@ The Simulation Status API allows you to monitor the progress of your simulation 
 
 <CodeGroup>
 ```bash API Key
-curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/" \
+curl -X GET "https://api.vects.ai/api/v1/simulations/{simulation_id}/status/" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```bash Token
-curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/" \
+curl -X GET "https://api.vects.ai/api/v1/simulations/{simulation_id}/status/" \
   -H "Authorization: Token YOUR_AUTH_TOKEN"
 ```
 
 ```bash Anonymous
-curl -X GET "https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/"
+curl -X GET "https://api.vects.ai/api/v1/simulations/{simulation_id}/status/"
 ```
 </CodeGroup>
 
@@ -39,7 +39,7 @@ This endpoint supports anonymous access, allowing you to check status without au
 ## Example Request
 
 ```bash
-curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/status/" \
+curl -X GET "https://api.vects.ai/api/v1/simulations/sim_abc123def456/status/" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 

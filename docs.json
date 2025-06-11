@@ -57,12 +57,12 @@
       "anchors": [
         {
           "anchor": "World Lens",
-          "href": "https://worldlens.co",
+          "href": "https://vects.ai",
           "icon": "globe"
         },
         {
           "anchor": "Support",
-          "href": "mailto:support@worldlens.co",
+          "href": "mailto:support@vects.ai",
           "icon": "envelope"
         }
       ]
@@ -76,13 +76,13 @@
     "links": [
       {
         "label": "Dashboard",
-        "href": "https://api.worldlens.co"
+        "href": "https://api.vects.ai"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Get API Key",
-      "href": "https://api.worldlens.co/auth/register"
+      "href": "https://api.vects.ai/auth/register"
     }
   },
   "footer": {

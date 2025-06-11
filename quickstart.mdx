@@ -9,7 +9,7 @@ This guide will help you create your first 3D simulation using World Lens APIs. 
 
 ## Step 1: Get Your API Key
 
-1. **Sign up** at [https://api.worldlens.co/auth/register](https://api.worldlens.co/auth/register)
+1. **Sign up** at [https://api.vects.ai/auth/register](https://api.vects.ai/auth/register)
 2. **Verify your email** and complete the onboarding process
 3. **Generate an API key** from your dashboard
 4. **Copy and save** your API key securely
@@ -24,7 +24,7 @@ Let's create a simple urban intersection simulation:
 
 <CodeGroup>
 ```bash cURL
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -33,7 +33,7 @@ curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.worldlens.co/api/v1/simulations/', {
+const response = await fetch('https://api.vects.ai/api/v1/simulations/', {
   method: 'POST',
   headers: {
     'Authorization': 'Api-Key YOUR_API_KEY',
@@ -51,7 +51,7 @@ console.log('Simulation ID:', simulation.simulation_id);
 ```python Python
 import requests
 
-url = "https://api.worldlens.co/api/v1/simulations/"
+url = "https://api.vects.ai/api/v1/simulations/"
 headers = {
     "Authorization": "Api-Key YOUR_API_KEY",
     "Content-Type": "application/json"
@@ -83,13 +83,13 @@ Monitor your simulation's progress:
 
 <CodeGroup>
 ```bash cURL
-curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/status/" \
+curl -X GET "https://api.vects.ai/api/v1/simulations/sim_abc123def456/status/" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```javascript JavaScript
 async function checkStatus(simulationId) {
-  const response = await fetch(`https://api.worldlens.co/api/v1/simulations/${simulationId}/status/`, {
+  const response = await fetch(`https://api.vects.ai/api/v1/simulations/${simulationId}/status/`, {
     headers: {
       'Authorization': 'Api-Key YOUR_API_KEY'
     }
@@ -114,7 +114,7 @@ const pollStatus = setInterval(async () => {
 import time
 
 def check_status(simulation_id):
-    url = f"https://api.worldlens.co/api/v1/simulations/{simulation_id}/status/"
+    url = f"https://api.vects.ai/api/v1/simulations/{simulation_id}/status/"
     headers = {"Authorization": "Api-Key YOUR_API_KEY"}
     
     response = requests.get(url, headers=headers)
@@ -140,13 +140,13 @@ Once complete, get your simulation data:
 
 <CodeGroup>
 ```bash cURL
-curl -X GET "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/" \
+curl -X GET "https://api.vects.ai/api/v1/simulations/sim_abc123def456/" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```javascript JavaScript
 async function getResults(simulationId) {
-  const response = await fetch(`https://api.worldlens.co/api/v1/simulations/${simulationId}/`, {
+  const response = await fetch(`https://api.vects.ai/api/v1/simulations/${simulationId}/`, {
     headers: {
       'Authorization': 'Api-Key YOUR_API_KEY'
     }
@@ -166,7 +166,7 @@ const results = await getResults('sim_abc123def456');
 
 ```python Python
 def get_results(simulation_id):
-    url = f"https://api.worldlens.co/api/v1/simulations/{simulation_id}/"
+    url = f"https://api.vects.ai/api/v1/simulations/{simulation_id}/"
     headers = {"Authorization": "Api-Key YOUR_API_KEY"}
     
     response = requests.get(url, headers=headers)
@@ -184,7 +184,7 @@ print(f"Features: {len(results['features'])}")
 Add risk assessment to your simulation:
 
 ```bash
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -224,7 +224,7 @@ curl -X POST "https://api.worldlens.co/risk-assessment/" \
 Connect to the WebSocket for real-time urban mobility simulation:
 
 ```javascript
-const ws = new WebSocket('ws://api.worldlens.co:8001/ws/marl_state');
+const ws = new WebSocket('ws://api.vects.ai:8001/ws/marl_state');
 
 ws.onopen = function() {
   console.log('Connected to MARL WebSocket');
@@ -341,7 +341,7 @@ function WorldLensSimulation() {
   const createSimulation = async () => {
     setStatus('creating');
     
-    const response = await fetch('https://api.worldlens.co/api/v1/simulations/', {
+    const response = await fetch('https://api.vects.ai/api/v1/simulations/', {
       method: 'POST',
       headers: {
         'Authorization': `Api-Key ${process.env.REACT_APP_WORLDLENS_API_KEY}`,
@@ -361,7 +361,7 @@ function WorldLensSimulation() {
   };
 
   const pollStatus = async (simulationId) => {
-    const response = await fetch(`https://api.worldlens.co/api/v1/simulations/${simulationId}/status/`);
+    const response = await fetch(`https://api.vects.ai/api/v1/simulations/${simulationId}/status/`);
     const statusData = await response.json();
     
     if (statusData.status === 'completed') {
@@ -393,7 +393,7 @@ using UnityEngine.Networking;
 public class WorldLensIntegration : MonoBehaviour 
 {
     private string apiKey = "YOUR_API_KEY";
-    private string baseUrl = "https://api.worldlens.co/api/v1";
+    private string baseUrl = "https://api.vects.ai/api/v1";
     
     public void CreateSimulation() 
     {
@@ -446,9 +446,9 @@ public class WorldLensIntegration : MonoBehaviour
 ### Getting Help
 
 - **Documentation**: Browse our comprehensive API docs
-- **Support**: Email support@worldlens.co
+- **Support**: Email support@vects.ai
 - **Community**: Join our Discord community
-- **Status**: Check api.worldlens.co/status for service status
+- **Status**: Check api.vects.ai/status for service status
 
 ## What's Next?
 

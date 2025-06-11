@@ -21,7 +21,7 @@ The Urban Mobility MARL (Multi-Agent Reinforcement Learning) WebSocket API provi
 Connect to the WebSocket endpoint to start interacting with the MARL system:
 
 ```
-ws://api.worldlens.co:8001/ws/marl_state
+ws://api.vects.ai:8001/ws/marl_state
 ```
 
 <Note>
@@ -42,7 +42,7 @@ The system supports multiple agent types, each with unique behaviors:
 
 ### 1. Connection & Initialization
 ```javascript
-const ws = new WebSocket('ws://api.worldlens.co:8001/ws/marl_state');
+const ws = new WebSocket('ws://api.vects.ai:8001/ws/marl_state');
 
 ws.onopen = function() {
     console.log('Connected to MARL WebSocket');
@@ -210,7 +210,7 @@ class MARLVisualizer {
     constructor() {
         this.scene = new THREE.Scene();
         this.agents = new Map();
-        this.ws = new WebSocket('ws://api.worldlens.co:8001/ws/marl_state');
+        this.ws = new WebSocket('ws://api.vects.ai:8001/ws/marl_state');
         
         this.ws.onmessage = (event) => {
             this.handleMessage(JSON.parse(event.data));
@@ -266,7 +266,7 @@ public class MARLController : MonoBehaviour
     
     void Start() 
     {
-        ws = new WebSocket("ws://api.worldlens.co:8001/ws/marl_state");
+        ws = new WebSocket("ws://api.vects.ai:8001/ws/marl_state");
         
         ws.OnMessage += (sender, e) => {
             var message = JsonConvert.DeserializeObject<MARLMessage>(e.Data);

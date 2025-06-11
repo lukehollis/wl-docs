@@ -1,6 +1,6 @@
 ---
 title: "Radius Risk Analysis"
-api: "GET https://api.worldlens.co/risk-assessment/radius/"
+api: "GET https://api.vects.ai/risk-assessment/radius/"
 description: "Assess risks within a specified radius around a geographic point"
 ---
 
@@ -12,17 +12,17 @@ The Radius Risk Analysis API evaluates potential threats and hazards within a ci
 
 <CodeGroup>
 ```bash API Key
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```bash Token
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5" \
   -H "Authorization: Token YOUR_AUTH_TOKEN"
 ```
 
 ```bash Anonymous
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5"
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5"
 ```
 </CodeGroup>
 
@@ -68,22 +68,22 @@ This endpoint supports anonymous access for basic risk assessments, though authe
 
 <CodeGroup>
 ```bash Basic Area Analysis
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=2" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=2" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```bash High-Resolution Analysis
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5&num_points=500&resolution=high" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=5&num_points=500&resolution=high" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```bash Specific Risk Types
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=3&risk_types=crime,traffic&num_points=200" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=3&risk_types=crime,traffic&num_points=200" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ```bash Time-Specific Analysis
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=1&time=2024-01-15T22:00:00Z" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=1&time=2024-01-15T22:00:00Z" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 </CodeGroup>
@@ -331,28 +331,28 @@ curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&l
 ### Emergency Planning
 ```bash
 # Assess risks around a hospital for emergency evacuation planning
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=3&risk_types=environmental,infrastructure&num_points=300" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=3&risk_types=environmental,infrastructure&num_points=300" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ### Event Security
 ```bash
 # Analyze security risks around an event venue
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=1&risk_types=crime,geopolitical&time=2024-01-15T19:00:00Z" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=1&risk_types=crime,geopolitical&time=2024-01-15T19:00:00Z" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ### Real Estate Assessment
 ```bash
 # Evaluate neighborhood safety for property investment
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=0.5&risk_types=crime,environmental&resolution=high" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=0.5&risk_types=crime,environmental&resolution=high" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
 ### Logistics Planning
 ```bash
 # Assess risks around a distribution center
-curl -X GET "https://api.worldlens.co/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=10&risk_types=traffic,infrastructure,weather" \
+curl -X GET "https://api.vects.ai/risk-assessment/radius/?latitude=37.7749&longitude=-122.4194&radius_km=10&risk_types=traffic,infrastructure,weather" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
@@ -418,7 +418,7 @@ async function analyzeAreaRisk(lat, lng, radius) {
         resolution: 'high'
     });
     
-    const response = await fetch(`https://api.worldlens.co/risk-assessment/radius/?${params}`, {
+    const response = await fetch(`https://api.vects.ai/risk-assessment/radius/?${params}`, {
         headers: {
             'Authorization': 'Api-Key YOUR_API_KEY'
         }
@@ -443,7 +443,7 @@ async function analyzeAreaRisk(lat, lng, radius) {
 import requests
 
 def analyze_area_risk(lat, lng, radius_km, api_key, num_points=100):
-    url = "https://api.worldlens.co/risk-assessment/radius/"
+    url = "https://api.vects.ai/risk-assessment/radius/"
     params = {
         "latitude": lat,
         "longitude": lng,
@@ -474,7 +474,7 @@ library(httr)
 library(jsonlite)
 
 analyze_area_risk <- function(lat, lng, radius_km, api_key) {
-  url <- "https://api.worldlens.co/risk-assessment/radius/"
+  url <- "https://api.vects.ai/risk-assessment/radius/"
   
   response <- GET(
     url,

@@ -11,7 +11,7 @@ World Lens APIs use API key authentication for most endpoints. Some endpoints al
 
 ### Getting Your API Key
 
-1. **Register an Account**: Visit [https://api.worldlens.co/auth/register](https://api.worldlens.co/auth/register) to create your account
+1. **Register an Account**: Visit [https://api.vects.ai/auth/register](https://api.vects.ai/auth/register) to create your account
 2. **Generate API Key**: Once logged in, navigate to the API Keys section in your dashboard
 3. **Copy Your Key**: Save your API key securely - it won't be shown again
 
@@ -20,7 +20,7 @@ World Lens APIs use API key authentication for most endpoints. Some endpoints al
 Include your API key in the request headers:
 
 ```bash
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -39,7 +39,7 @@ For user-specific operations, you can use token authentication:
 ### Getting a Token
 
 ```bash
-curl -X POST "https://api.worldlens.co/auth/token/" \
+curl -X POST "https://api.vects.ai/auth/token/" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "your_username",
@@ -59,7 +59,7 @@ curl -X POST "https://api.worldlens.co/auth/token/" \
 Include the token in your request headers:
 
 ```bash
-curl -X GET "https://api.worldlens.co/auth/user/" \
+curl -X GET "https://api.vects.ai/auth/user/" \
   -H "Authorization: Token your_auth_token_here"
 ```
 

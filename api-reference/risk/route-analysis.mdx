@@ -1,6 +1,6 @@
 ---
 title: "Route Risk Analysis"
-api: "POST https://api.worldlens.co/risk-assessment/"
+api: "POST https://api.vects.ai/risk-assessment/"
 description: "Assess potential risks and threats along a specified route"
 ---
 
@@ -12,19 +12,19 @@ The Route Risk Analysis API evaluates potential threats and hazards along a spec
 
 <CodeGroup>
 ```bash API Key
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json"
 ```
 
 ```bash Token
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Authorization: Token YOUR_AUTH_TOKEN" \
   -H "Content-Type: application/json"
 ```
 
 ```bash Anonymous
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Content-Type: application/json"
 ```
 </CodeGroup>
@@ -84,7 +84,7 @@ This endpoint supports anonymous access for basic risk assessments, though authe
 
 <CodeGroup>
 ```bash Basic Route Analysis
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -97,7 +97,7 @@ curl -X POST "https://api.worldlens.co/risk-assessment/" \
 ```
 
 ```bash Comprehensive Analysis
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -116,7 +116,7 @@ curl -X POST "https://api.worldlens.co/risk-assessment/" \
 ```
 
 ```bash Flight Path Analysis
-curl -X POST "https://api.worldlens.co/risk-assessment/" \
+curl -X POST "https://api.vects.ai/risk-assessment/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -414,7 +414,7 @@ curl -X POST "https://api.worldlens.co/risk-assessment/" \
 ### JavaScript/Web
 ```javascript
 async function analyzeRoute(routePoints) {
-    const response = await fetch('https://api.worldlens.co/risk-assessment/', {
+    const response = await fetch('https://api.vects.ai/risk-assessment/', {
         method: 'POST',
         headers: {
             'Authorization': 'Api-Key YOUR_API_KEY',
@@ -440,7 +440,7 @@ async function analyzeRoute(routePoints) {
 import requests
 
 def analyze_route_risk(route_points, api_key):
-    url = "https://api.worldlens.co/risk-assessment/"
+    url = "https://api.vects.ai/risk-assessment/"
     headers = {
         "Authorization": f"Api-Key {api_key}",
         "Content-Type": "application/json"

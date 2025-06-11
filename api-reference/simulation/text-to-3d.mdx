@@ -1,6 +1,6 @@
 ---
 title: "Text to 3D Simulation"
-api: "POST https://api.worldlens.co/api/v1/simulations/"
+api: "POST https://api.vects.ai/api/v1/simulations/"
 description: "Create immersive 3D simulations from natural language descriptions"
 ---
 
@@ -12,13 +12,13 @@ The Text to 3D Simulation API transforms natural language prompts into fully int
 
 <CodeGroup>
 ```bash API Key
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json"
 ```
 
 ```bash Token
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Token YOUR_AUTH_TOKEN" \
   -H "Content-Type: application/json"
 ```
@@ -60,7 +60,7 @@ curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
 
 <CodeGroup>
 ```bash Basic Simulation
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -69,7 +69,7 @@ curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
 ```
 
 ```bash Advanced Simulation
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -85,7 +85,7 @@ curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
 ```
 
 ```bash Disaster Scenario
-curl -X POST "https://api.worldlens.co/api/v1/simulations/" \
+curl -X POST "https://api.vects.ai/api/v1/simulations/" \
   -H "Authorization: Api-Key YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -194,7 +194,7 @@ If you provide a `webhook_url`, you'll receive POST notifications at key simulat
   "event": "simulation.completed",
   "simulation_id": "sim_abc123def456",
   "timestamp": "2024-01-15T10:35:15Z",
-  "result_url": "https://api.worldlens.co/api/v1/simulations/sim_abc123def456/"
+  "result_url": "https://api.vects.ai/api/v1/simulations/sim_abc123def456/"
 }
 ```
 
